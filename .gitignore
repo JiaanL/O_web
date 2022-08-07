@@ -4,6 +4,6 @@ oracle_web2.sql
 oracle_web3.sql
 eth_crawler/aave.txt
 eth_crawler/pkg/000
-oracleWeb/node_modules
+# oracleWeb/node_modules
 sql_data
 data
