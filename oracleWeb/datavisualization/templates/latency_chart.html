@@ -1,0 +1,111 @@
+{% block content %}
+
+<head>
+    <script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+    <script type="text/javascript" src="https://assets.pyecharts.org/assets/echarts.min.js"></script>
+</head>
+
+<body>
+    <form action="latency_chart_view" method="post">
+        Block Start with: <input type="number" value={{min_block}} name="StartBlock" />
+        Block End with: <input type="number" value={{max_block}} name="EndBlock" />
+        <!-- <select multiple="multiple"  name="Oracles" id="Oracles" size="4">
+            {% for service in services %}
+                <option value="{{service.id}}">{{service}}</option>
+            {% endfor %}
+            <option value="chainlink_eth_usd">Chainlink ETH/USD</option>
+            <option value="maker_eth_usd">Maker ETH/USD</option>
+            <option value="uniswapv2_eth_usdc">UniswapV2 ETH/USDC</option>
+            <option value="uniswapv3_eth_usdc">UniswapV3 ETH/USDC</option>
+        </select> -->
+        <p>
+
+        <table border="1">
+            <tr>
+                <th>Source Oracle Name</th>
+                <th>Source Token 0</th>
+                <th>Source Token 1</th>
+                <th>Target Oracle Name</th>
+                <th>Target Token 0</th>
+                <th>Target Token 1</th>
+                <th>Block Start</th>
+                <th>Block End</th>
+                <!-- <th>Update Data</th> -->
+                <!-- <th>Select as Source</th>
+                <th>Select as Source</th> -->
+            </tr>
+            
+            {% for summary in summaries %}
+                <tr>
+                    <td>{{summary.source_token_pair.oracle.name}}</td>
+                    <td>{{summary.source_token_pair.token0}}</td>
+                    <td>{{summary.source_token_pair.token1}}</td>
+                    <td>{{summary.target_token_pair.oracle.name}}</td>
+                    <td>{{summary.target_token_pair.token0}}</td>
+                    <td>{{summary.target_token_pair.token1}}</td>
+                    <td>{{summary.min_block_number}}</td>
+                    <td>{{summary.max_block_number}}</td>
+                    <!-- <td><a href="update_data?oracle={{summary.token_pair.oracle.name}}&token0={{summary.token_pair.token0}}&token1={{summary.token_pair.token1}}&from={{summary.min_block_number}}&to={{summary.max_block_number}}">Update</a></td> -->
+                    
+                    {% if summary.used %}
+                        <td><input type="checkbox" name="Oracles" value="{{summary.source_token_pair.oracle.name}}_{{summary.source_token_pair.token0}}_{{summary.source_token_pair.token1}};{{summary.target_token_pair.oracle.name}}_{{summary.target_token_pair.token0}}_{{summary.target_token_pair.token1}}" checked></option></td>
+                    {% else %}
+                        <td><input type="checkbox" name="Oracles" value="{{summary.source_token_pair.oracle.name}}_{{summary.source_token_pair.token0}}_{{summary.source_token_pair.token1}};{{summary.target_token_pair.oracle.name}}_{{summary.target_token_pair.token0}}_{{summary.target_token_pair.token1}}"></option></td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        
+        </table>
+        
+            <!-- <input type="checkbox" name="Oracles" value="chainlink_eth_usd">Chainlink ETH/USD</option>
+            <br>
+            <input type="checkbox" name="Oracles" value="maker_eth_usd">Maker ETH/USD</option>
+            <br>
+            <input type="checkbox" name="Oracles" value="uniswapv2_eth_usdc">UniswapV2 ETH/USDC</option>
+            <br>
+            <input type="checkbox" name="Oracles" value="uniswapv3_eth_usdc">UniswapV3 ETH/USDC</option>
+        </p> -->
+        </p>
+        <input type="submit" value="submit">
+    </form>
+    <br>
+    <div id="line_chart" style="width:1000px; height:600px;"></div>
+    {% if have_data == True %}
+    <script>
+        // var chart = echarts.init(document.getElementById('line_chart'), 'white', {renderer: 'canvas'});
+        // $(
+        //     function () {
+        //         chart.setOption({{line}});
+        //     }
+        // );
+
+        var chart = echarts.init(document.getElementById('line_chart'), 'white', {renderer: 'canvas'});
+        // console.log("123")
+        $(
+            function () {
+                fetchData(chart);
+                // setInterval(fetchData, 2000);
+            }
+        );
+
+        function fetchData() {
+            $.ajax({
+                type: "GET",
+                url: "/datavisualization/gen_latency_chart",
+                dataType: 'json',
+                success: function (result) {
+                    chart.setOption(result.data);
+                }
+            });
+        }
+    </script>
+
+    
+    {% endif %}
+
+<!-- {{line}} -->
+</body>
+
+
+
+{% endblock %}

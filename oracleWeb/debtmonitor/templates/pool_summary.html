@@ -1,0 +1,31 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>all Oracle</title>
+</head>
+
+<body> 
+
+<table border="1">
+    <tr>
+        <th>Action</th>
+        <th>Data Amount</th>
+        <th>Block Start</th>
+        <th>Block End</th>
+        <th>Update Data</th>
+    </tr>
+    
+        {% for summary in summaries %}
+            <tr>
+                <td>{{summary.action}}</td>
+                <td>{{summary.data_amount}}</td>
+                <td>{{summary.min_block_number}}</td>
+                <td>{{summary.max_block_number}}</td>
+                <td><a href="update_data?oracle={{summary.token_pair.oracle.name}}&token0={{summary.token_pair.token0}}&token1={{summary.token_pair.token1}}&from={{summary.min_block_number}}&to={{summary.max_block_number}}">Update</a></td>
+            </tr>
+        {% endfor %}
+
+</table>
+
+</body>
+</html>
