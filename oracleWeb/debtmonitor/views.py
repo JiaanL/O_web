@@ -325,9 +325,10 @@ def update_data(request):
                             for tmp_obj in tqdm.tqdm(sub_list):
                                 try:
                                     tmp_obj.save()
-                                except IntegrityError:
+                                except IntegrityError: 
                                     pass
                     bn = log_df.get('BlockNumber', pd.Series(["-1"])).values
+                    # 123
             
             if log_name == "LiquidationCall":
                 liquidation_call_list = []
