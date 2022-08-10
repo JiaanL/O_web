@@ -6,6 +6,8 @@ urlpatterns = [
     path('all_oracle', views.all_oracle),
     path('update_data', views.update_data),
     path('update_block_time', views.update_block),
+    path('auto_update_block_time', views.block_time_auto_update_view),
+
     path('initialize', views.initialize_data),
     path('read_csv/<str:oracle_name>', views.update_data_from_csv),
 

@@ -8,6 +8,7 @@ from django.http import HttpResponseRedirect
 from django.http import HttpResponse
 from django.db.models import Max, Min
 from django.db import IntegrityError
+from django.db.models import Max, Min, Avg, Q, F
 
 from .models import *
 from datastorage.models import *
@@ -65,7 +66,7 @@ aave_log_details = OrderedDict(
         topic2 = ['address', 'onBehalfOf'],
         topic3 = ['int', 'referral'],
         data = [
-            'address reserve'.split(' '),
+            'address user'.split(' '),
             'int amount'.split(' '),
         ]
     ),
@@ -210,7 +211,7 @@ def update_data(request):
         # replace= True if request.POST['replace'] == 'True' else False
         block_from = int(request.POST['block_from'])
         block_to = int(request.POST['block_to'])
-        assert block_to > block_from, "ERROR: block_to must be greater than block_from"
+        assert block_to >= block_from, "ERROR: block_to must be greater than block_from"
 
         archive_node = "http://localhost:19545"
         # data_source = f"{oracle}_{token0}_{token1}"
@@ -237,12 +238,19 @@ def update_data(request):
 
         res = res.decode("utf-8").split(';')[:-1]
         res = pd.DataFrame(list(map(lambda x: json.loads(s=x), res)))
+
+        if res.shape[0] == 0:
+            return HttpResponse("No Data" + DATA_UPDATE_FORM)
+
         res = res[['Topic0', 'Topic1', 'Topic2', 'Topic3', 'Data', 'BlockNumber', 'Index']]
         for t0 in res.Topic0.unique():
             assert t0 in [i['topic0'] for i in aave_log_details.values()], f"ERROR: {t0} is not in aave_log_details"
         log_df_dict = OrderedDict()
         for log_name, log_meta in aave_log_details.items():
+            # print(log_name)
             sub_df = res[res["Topic0"] == log_meta['topic0']].copy()
+            if sub_df.shape[0] == 0:
+                continue
             del sub_df['Topic0']
             for i in range(1,4):
                 topic_i = log_meta['topic'+str(i)]
@@ -270,7 +278,11 @@ def update_data(request):
             sub_df['Index'] = sub_df['Index'].astype(int)
             sub_df = sub_df.reset_index(drop=True)
             log_df_dict[log_name] = sub_df
-        
+
+            
+            # for col in sub_df.columns: print(sub_df[col])
+
+        # return HttpResponse(DATA_UPDATE_FORM)
         for log_name, log_df in log_df_dict.items():
             update_record = LendingPoolUpdateSummary.objects.get_or_create(action=log_name)[0]
             if log_name in liquidation_pool_target:
@@ -395,7 +407,7 @@ def get_latest_block_number():
     return res
 
 
-each_update_amount = 20000
+each_update_amount = 50000
 
 def auto_update(request):
 
@@ -405,7 +417,7 @@ def auto_update(request):
     request.POST = {}
     # request.GET["update_summary"] = "1"
     print_update = request.GET.get("print_update", "0") == "1"
-    time_wait = int(request.GET.get("time_wait", "0"))
+    time_wait = int(request.GET.get("time_wait", "20"))
     # print(print_update)
     # print("--- Updating Summary ---")
     # all_oracle(request) # update all summary
@@ -426,7 +438,7 @@ def auto_update(request):
         # else:
         #     continue
 
-        if request.POST['block_to'] > request.POST['block_from']:
+        if request.POST['block_to'] >= request.POST['block_from']:
             if request.POST['block_to'] > (request.POST['block_from'] + each_update_amount - 1):
                 request.POST['block_to'] = request.POST['block_from'] + each_update_amount - 1
             if request.POST['block_to'] > summary.max_block_number:
@@ -469,3 +481,21 @@ def auto_update_view(request):
     t.setDaemon(True)
     t.start()
     return HttpResponse("started")
+
+example = "0xe2d8e9ac6779b681a8a78a8b0963d81a41f485ee"
+def test(request):
+    target_address = request.GET.get("target_address", example)
+
+    target_interactions = LendingPoolInteraction.objects.filter(
+        on_behalf_of="0xe2d8e9ac6779b681a8a78a8b0963d81a41f485ee"
+    ).annotate(
+        block_num=F('block_number__number'),
+    ).all().values()
+    
+    interaction_df = pd.DataFrame(list(target_interactions.values()))
+
+    # reserve 是本来的token，不是atoken
+
+    print(interaction_df['action block_num amount reserve'.split(' ')])
+
+    return HttpResponse("test")

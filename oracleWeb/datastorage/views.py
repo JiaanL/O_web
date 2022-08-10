@@ -23,6 +23,7 @@ from pandarallel import pandarallel
 pandarallel.initialize(progress_bar=False)
 
 
+each_update_amount = 20000
 
 def datastorage(request):
     return HttpResponseRedirect('/datastorage/all_oracle')
@@ -158,7 +159,7 @@ def update_block(request):
 
         
 
-        for block_time_index in block_time_df.index:
+        for block_time_index in tqdm.tqdm(block_time_df.index):
             tmp_block_num = int(block_time_df.loc[block_time_index, 'BlockNum'])
             if tmp_block_num < min_block_num or tmp_block_num > max_block_num:
                 # try: 
@@ -173,6 +174,85 @@ def update_block(request):
                 )
         end = time.time()
         return HttpResponse(f"Data Crawl Completed with time {np.round(end - start, 2)} second"+DATA_UPDATE_FORM)
+
+
+def block_time_auto_update(request):
+
+    request.GET = request.GET.copy()
+    request.POST = request.POST.copy()
+    request.method = 'POST'
+    request.POST = {}
+    request.GET["update_summary"] = "1"
+    print_update = request.GET.get("print_update", "0") == "1"
+    time_wait = int(request.GET.get("time_wait", "0"))
+    # print(print_update)
+    # print("--- Updating Summary ---")
+    # all_oracle(request) # update all summary
+    # print("---  Start Crawling  ---")
+    while True:
+        min_block_num = Block.objects.aggregate(Min('number')).get("number__min",  np.inf)
+        max_block_num = Block.objects.aggregate(Max('number')).get("number__max", -np.inf)
+        min_block_num = np.inf if min_block_num is None else min_block_num
+        max_block_num = -np.inf if max_block_num is None else max_block_num
+        max_block_num = 12980000 if max_block_num < 12980000 else max_block_num
+        
+        # latest_block = 14956506 #get_latest_block_number()
+        # latest_block = 15000000 #get_latest_block_number()
+        latest_block = get_latest_block_number()
+
+        time.sleep(time_wait)
+        request.POST['block_from'] =  max_block_num # 15200021  #
+        # request.POST['block_from'] =  15195000
+
+        request.POST['block_to'] = latest_block
+        request.POST['replace'] = "False"
+
+        # if summary.token_pair.oracle.name == "uniswapv3":# and request.POST['token1'] == "dai":
+        #     pass
+        # else:
+        #     continue
+
+        if request.POST['block_to'] > request.POST['block_from']:
+            if request.POST['block_to'] > (request.POST['block_from'] + each_update_amount):
+                request.POST['block_to'] = request.POST['block_from'] + each_update_amount
+            if request.POST['block_to'] > max_block_num:
+            
+                if print_update:
+                    print(f"""
+                    Updating Data: 
+                    {request.POST['block_from']}
+                    {request.POST['block_to']}
+                    """)
+                
+                update_block(request)
+
+                # summary = Summary.objects.get(token_pair__exact=token_pair)
+                # summary.min_block_number = min_block_number   
+                # if summary.max_block_number < request.POST['block_to']:
+                # summary.max_block_number = request.POST['block_to']
+                # summary.save()
+                # summary.max_block_number = request.POST['block_to']
+                # # summary.data_amount = data_amount
+                # summary.save()
+            else:
+                if print_update:
+                    print(f"""
+                    Already Latest: 
+                    latest block: {latest_block}
+                    """)
+        else: print(f"invalid block range {request.POST['block_from']} {request.POST['block_to']}")
+    
+    
+
+
+
+def block_time_auto_update_view(request):
+    t = threading.Thread(target=block_time_auto_update,
+                            args=(request,))
+    t.setDaemon(True)
+    t.start()
+    return HttpResponse("started")
+
 
 def insert_price(df, token_pair, replace=False):
     # try: 
@@ -566,7 +646,6 @@ def get_latest_block_number():
     return res
 
 
-each_update_amount = 2000
 
 def auto_update(request):
 

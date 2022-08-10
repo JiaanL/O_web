@@ -3,4 +3,4 @@ from .models import *
 # Register your models here.
 admin.site.register(LendingPoolInteraction)
 admin.site.register(LendingPoolUpdateSummary)
-admin.site.register(ReservesStatus)
+admin.site.register(ReservesStatus) 

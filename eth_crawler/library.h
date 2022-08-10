@@ -71,6 +71,7 @@ extern "C" {
 extern GoInt get_latest_block_num(char* archive_node_c);
 extern char* get_log_data(char* target_contract_c, char* archive_node_c, GoInt block_from, GoInt block_to);
 extern char* get_aave_log(char* archive_node_c, GoInt block_from, GoInt block_to);
+extern char* get_single_block_time(char* archive_node_c, GoInt block_num);
 extern char* get_block_time(char* archive_node_c, GoInt block_from, GoInt block_to);
 
 #ifdef __cplusplus

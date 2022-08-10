@@ -22,6 +22,11 @@ class LendingPoolInteraction(models.Model):
     rate_mode = models.CharField(max_length=100, default='') 
     rate = models.FloatField(default=-1)
 
+    transaction_hash = models.CharField(max_length=100, default='') # transaction hash
+
+    def __str__(self):
+        return f"""{self.action}____{self.block_number}_{self.index}_{self.on_behalf_of}_{self.reserve}_{self.amount}_{self.rate_mode}_{self.rate}"""
+
     class Meta:
         unique_together = ('index', 'block_number',)
 
@@ -55,6 +60,8 @@ class LiquidationCall(models.Model):
     # rate = models.FloatField(default=-1)
     receive_atoken = models.BooleanField(default=False)
 
+    transaction_hash = models.CharField(max_length=100, default='') # transaction hash
+
     class Meta:
         unique_together = ('index', 'block_number',)
 
@@ -72,8 +79,31 @@ class ReservesStatus(models.Model):
     liquidity_index = models.FloatField(default=-1)
     variable_borrow_index = models.FloatField(default=-1)
     
+    transaction_hash = models.CharField(max_length=100, default='') # transaction hash
+
     class Meta:
         unique_together = ('index', 'block_number',)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     # emit Borrow(

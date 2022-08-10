@@ -7,7 +7,6 @@ import (
 	"log"
 	"math"
 	"math/big"
-	"os"
 	"strconv"
 	"sync"
 
@@ -53,25 +52,25 @@ func main() {
 	// GetTx.Get_tx_to_target_contract_main()
 	// target_contract := "chainlink_eth_usd"
 
-	archive_node := "http://localhost:19545"
+	// archive_node := "http://localhost:19545"
 
-	blcokFrom := 12466873
-	blockTo := 12566873
+	// blcokFrom := 15279700
+	// blockTo := 15279999
 
-	// get_block_time(C.CString(archive_node), blcokFrom, blockTo)
-	// target_contract := "uniswapv2_eth_usdt"
-	// target_contract_c := C.CString(target_contract)
-	// get_log_data(target_contract_c, C.CString(archive_node), blcokFrom, blockTo)
-	ttt := get_aave_log(C.CString(archive_node), blcokFrom, blockTo)
-	fmt.Println(ttt)
-	file, err := os.Create("aave.txt")
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		file.WriteString(ttt)
-		fmt.Println("Done")
-	}
-	file.Close()
+	// // get_block_time(C.CString(archive_node), blcokFrom, blockTo)
+	// // target_contract := "uniswapv2_eth_usdt"
+	// // target_contract_c := C.CString(target_contract)
+	// // get_log_data(target_contract_c, C.CString(archive_node), blcokFrom, blockTo)
+	// ttt := get_aave_log(C.CString(archive_node), blcokFrom, blockTo)
+	// fmt.Println(ttt)
+	// file, err := os.Create("aave.txt")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// } else {
+	// 	file.WriteString(ttt)
+	// 	fmt.Println("Done")
+	// }
+	// file.Close()
 }
 
 // type ChainlinkOracleLogData struct {
@@ -424,9 +423,10 @@ func get_log_data(target_contract_c *C.char, archive_node_c *C.char, block_from 
 
 }
 
+// func get_aave_log(archive_node_c *C.char, block_from int, block_to int) string {
+
 //export get_aave_log
-func get_aave_log(archive_node_c *C.char, block_from int, block_to int) string {
-	// func get_aave_log(archive_node_c *C.char, block_from int, block_to int) *C.char {
+func get_aave_log(archive_node_c *C.char, block_from int, block_to int) *C.char {
 
 	// target_contract := C.GoString(target_contract_c)
 	archive_node := C.GoString(archive_node_c)
@@ -455,27 +455,6 @@ func get_aave_log(archive_node_c *C.char, block_from int, block_to int) string {
 		},
 	}
 	logs, err := client.FilterLogs(context.Background(), query)
-
-	// if err != nil {
-	// 	// var data = new(jsonError)
-	// 	var data *jsonError
-	// 	// As - 解析错误内容
-	// 	if errors.As(err, &data) {
-	// 		if data.Code == -32000 {
-	// 			block_from += 1
-	// 			blockFrom := big.NewInt(int64(block_from))
-	// 			query := ethereum.FilterQuery{
-	// 				FromBlock: blockFrom,
-	// 				ToBlock:   blockTo, //(12466826 + 100), //14838875),
-	// 				Addresses: []common.Address{
-	// 					contractAddress,
-	// 				},
-	// 			}
-	// 			_, err := client.FilterLogs(context.Background(), query)
-	// 			err = err
-	// 		}
-	// 	}
-	// }
 
 	if err != nil {
 		log.Fatal(err)
@@ -513,21 +492,31 @@ func get_aave_log(archive_node_c *C.char, block_from int, block_to int) string {
 		data_str += `};`
 
 		all_data_str += data_str
-		// kkk := `{"ID":"abc","Content":[1,2,3]}`
-
-		// data := createValue(target_contract)
-		// if err := json.Unmarshal([]byte(data_str), data); err != nil {
-		// 	panic(err)
-		// }
-
-		// kkk = kkk
-
-		// fmt.Println(all_data_str_array)
 
 	}
-	return all_data_str
-	// return C.CString(all_data_str)
+	// return all_data_str
+	return C.CString(all_data_str)
 
+}
+
+//export get_single_block_time
+func get_single_block_time(archive_node_c *C.char, block_num int) *C.char {
+	archive_node := C.GoString(archive_node_c)
+	blockNum := big.NewInt(int64(block_num))
+
+	client, err := ethclient.Dial(archive_node)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	header, err := client.HeaderByNumber(context.Background(), blockNum)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	block_data := `{` + `"` + header.Number.String() + `":"` + strconv.FormatUint(uint64(header.Time), 10) + `"` + `}`
+
+	return C.CString(block_data)
 }
 
 //export get_block_time
@@ -546,7 +535,7 @@ func get_block_time(archive_node_c *C.char, block_from int, block_to int) *C.cha
 	blockMax := block_to
 
 	// Multi Process
-	p_num := 40
+	p_num := 10
 
 	c := make(chan [][2]string, p_num*2)
 	wg := &sync.WaitGroup{}
