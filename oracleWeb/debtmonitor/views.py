@@ -131,6 +131,13 @@ aave_log_details = OrderedDict(
         data = [
             'int rateMode'.split(' '),
         ]
+    ),
+    RebalanceStableBorrowRate = OrderedDict(
+        topic0 = '0x9f439ae0c81e41a04d3fdfe07aed54e6a179fb0db15be7702eb66fa8ef6f5300',
+        topic1 = ['address', 'reserve'],
+        topic2 = ['address', 'onBehalfOf'], # user, msg.sender
+        topic3 = None,
+        data = []
     )
 )
 
@@ -143,6 +150,7 @@ liquidation_pool_target = [
     "Repay",
     "LiquidationCall",
     "Swap",
+    "RebalanceStableBorrowRate"
 ]
 
 insert_col = [
@@ -153,6 +161,10 @@ insert_col = [
     "amount", 
     "rateMode", 
     "rate"
+]
+
+ignore_topic0 = [
+    '0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b'
 ]
 
 address_delete = '000000000000000000000000'
@@ -242,9 +254,12 @@ def update_data(request):
         if res.shape[0] == 0:
             return HttpResponse("No Data" + DATA_UPDATE_FORM)
 
-        res = res[['Topic0', 'Topic1', 'Topic2', 'Topic3', 'Data', 'BlockNumber', 'Index']]
+        for t in ['Topic0', 'Topic1', 'Topic2', 'Topic3']:
+            if t not in res.columns:
+                res[t] = res['Topic0'].copy()
         for t0 in res.Topic0.unique():
-            assert t0 in [i['topic0'] for i in aave_log_details.values()], f"ERROR: {t0} is not in aave_log_details"
+            assert t0 in [i['topic0'] for i in aave_log_details.values()] or t0 in ignore_topic0, f"ERROR: {t0} is not in aave_log_details"
+        res = res[['Topic0', 'Topic1', 'Topic2', 'Topic3', 'Data', 'BlockNumber', 'Index']]
         log_df_dict = OrderedDict()
         for log_name, log_meta in aave_log_details.items():
             # print(log_name)
@@ -408,6 +423,7 @@ def get_latest_block_number():
 
 
 each_update_amount = 50000
+contract_create_block = 11362579 
 
 def auto_update(request):
 
@@ -418,6 +434,7 @@ def auto_update(request):
     # request.GET["update_summary"] = "1"
     print_update = request.GET.get("print_update", "0") == "1"
     time_wait = int(request.GET.get("time_wait", "20"))
+    reverse = request.GET.get('reverse', '0') == "1"
     # print(print_update)
     # print("--- Updating Summary ---")
     # all_oracle(request) # update all summary
@@ -428,20 +445,32 @@ def auto_update(request):
         latest_block = get_latest_block_number()
         time.sleep(time_wait)
 
-        request.POST['block_from'] =  summary.max_block_number + 1 # 15200021  #
-        # request.POST['block_from'] =  15195000
+        if reverse:
+            request.POST['block_from'] =  contract_create_block
+            # request.POST['block_from'] =  15195000
 
-        request.POST['block_to'] = latest_block
+            request.POST['block_to'] = summary.min_block_number - 1 # 15200021  #
+
+            # direction = -1
+        else:
+            request.POST['block_from'] =  summary.max_block_number + 1 # 15200021  #
+            # request.POST['block_from'] =  15195000
+
+            request.POST['block_to'] = latest_block
+            # direction = 1
 
         # if summary.token_pair.oracle.name == "uniswapv3":# and request.POST['token1'] == "dai":
         #     pass
         # else:
         #     continue
 
-        if request.POST['block_to'] >= request.POST['block_from']:
+        if request.POST['block_to'] > request.POST['block_from']:
             if request.POST['block_to'] > (request.POST['block_from'] + each_update_amount - 1):
-                request.POST['block_to'] = request.POST['block_from'] + each_update_amount - 1
-            if request.POST['block_to'] > summary.max_block_number:
+                if reverse:
+                    request.POST['block_from'] = request.POST['block_to'] - each_update_amount + 1
+                else:
+                    request.POST['block_to'] = request.POST['block_from'] + each_update_amount - 1
+            if request.POST['block_to'] > summary.max_block_number or request.POST['block_from'] < summary.min_block_number:
             
                 if print_update:
                     print(f"""
