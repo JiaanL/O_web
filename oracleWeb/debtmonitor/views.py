@@ -9,6 +9,7 @@ from django.http import HttpResponse
 from django.db.models import Max, Min
 from django.db import IntegrityError
 from django.db.models import Max, Min, Avg, Q, F
+from rest_framework.views import APIView 
 
 from .models import *
 from datastorage.models import *
@@ -27,6 +28,10 @@ from collections import OrderedDict, defaultdict
 
 import ctypes
 from ctypes import c_char_p, cdll
+GoInt64 = ctypes.c_int64
+GoInt = GoInt64
+archive_node = "http://localhost:19545"
+
 from pandarallel import pandarallel
 pandarallel.initialize(progress_bar=False)
 
@@ -511,20 +516,481 @@ def auto_update_view(request):
     t.start()
     return HttpResponse("started")
 
-example = "0xe2d8e9ac6779b681a8a78a8b0963d81a41f485ee"
-def test(request):
-    target_address = request.GET.get("target_address", example)
 
-    target_interactions = LendingPoolInteraction.objects.filter(
-        on_behalf_of="0xe2d8e9ac6779b681a8a78a8b0963d81a41f485ee"
-    ).annotate(
-        block_num=F('block_number__number'),
-    ).all().values()
+
+## Reference : https://pyecharts.org/#/zh-cn/web_django
+# Create your views here.
+def response_as_json(data):
+    json_str = json.dumps(data)
+    response = HttpResponse(
+        json_str,
+        content_type="application/json",
+    )
+    response["Access-Control-Allow-Origin"] = "*"
+    return response
+
+def json_response(data, code=200):
+    data = {
+        "code": code,
+        "msg": "success",
+        "data": data,
+    }
+    return response_as_json(data)
+
+def json_error(error_string="error", code=500, **kwargs):
+    data = {
+        "code": code,
+        "msg": error_string,
+        "data": {}
+    }
+    data.update(kwargs)
+    return response_as_json(data)
+
+JsonResponse = json_response
+JsonError = json_error
+
+
+
+
+
+token_dict = dict(
+    usdc = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    usdt = '0xdac17f958d2ee523a2206206994597c13d831ec7',
+    dai =  '0x6b175474e89094c44da98b954eedeac495271d0f',
+    # common collateral asset
+    weth = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+)
+decimal_dict = dict(
+    usdc = 6,
+    usdt = 6,
+    dai =  18,
+    # common collateral asset
+    weth = 18
+)
+
+liquidation_threshold_dict = dict(
+    usdc = 0.88,
+    usdt = None, # not allowed as collateral
+    dai =  0.8,
+    # common collateral asset
+    weth = 0.85
+)
+revert_token_dict = {v: k for k, v in token_dict.items()}
+
+def get_potential_target():
+    data = pd.DataFrame(
+        list(
+            LendingPoolInteraction.objects.all().values()
+        )
+    )
+    return data['on_behalf_of'].unique().tolist()
+
+
+def get_interaction_data(target):
+    data = pd.DataFrame(
+        list(
+            LendingPoolInteraction.objects.filter(
+                on_behalf_of=target
+            ).annotate(
+                 block_num=F('block_number__number'),
+            ).all().values()
+        )
+    )
+    return data
+
+def get_reserves_status():
+    data = pd.DataFrame(
+        list(
+            ReservesStatus.objects.annotate(
+                 block_num=F('block_number__number'),
+            ).all().values()
+        )
+    )
+    return data
+
+def get_liquidation_call(target=None):
+    if target is None:
+        data = pd.DataFrame(
+            list(
+                LiquidationCall.objects.annotate(
+                    block_num=F('block_number__number'),
+                ).all().values()
+            )
+        )
+    else:
+        data = pd.DataFrame(
+            list(
+                LiquidationCall.objects.filter(
+                    on_behalf_of=target
+                ).annotate(
+                    block_num=F('block_number__number'),
+                ).all().values()
+            )
+        )
+    return data
+
+# Block Time
+def get_block_time(block_num):
+    __library = cdll.LoadLibrary('../eth_crawler/library.so')
+
+    get_single_block_time = __library.get_single_block_time
+    get_single_block_time.argtypes = [c_char_p, GoInt]
+    get_single_block_time.restype = c_char_p
+    try:
+        res = get_single_block_time(
+            archive_node.encode(), 
+            GoInt(int(block_num))
+        )
+        res = res.decode("utf-8")
+        res = json.loads(s=res)#.items()#, columns=['BlockNum', 'Timestamp'])
+        
+        return res[str(block_num)]
+    except Exception as e: 
+        print(e)
+
+def cal_stable_debt_change(stable_debt_amount_p, stable_borrow_rate_p, block_num, block_num_p):
+    block_time = get_block_time(block_num)
+    block_time_p = get_block_time(block_num_p)
+    exp = block_time - block_time_p
     
-    interaction_df = pd.DataFrame(list(target_interactions.values()))
+    ###### Reference #####: https://etherscan.io/address/0xc6845a5c768bf8d7681249f8927877efda425baf#code
+    expMinusOne = exp - 1
+    expMinusTwo = exp - 2 if exp > 2 else 0
+    ratePerSecond = stable_borrow_rate_p / SECONDS_PER_YEAR
+    basePowerTwo = ray_mul(ratePerSecond, ratePerSecond) # (ratePerSecond * ratePerSecond + 0.5 * RAY)/RAY
+    basePowerThree = ray_mul(basePowerTwo, ratePerSecond)#  + 0.5 * RAY)/RAY
+    secondTerm = (exp * expMinusOne * basePowerTwo) / 2
+    thirdTerm = (exp * expMinusOne * expMinusTwo * basePowerThree) / 6
+    compounded_interest = RAY + (ratePerSecond * exp) + (secondTerm) + (thirdTerm)
+    new_stable_balance = ray_mul(stable_debt_amount_p, compounded_interest)
+    balance_increase = new_stable_balance - stable_debt_amount_p
+    ########################################################################
 
-    # reserve 是本来的token，不是atoken
+    return new_stable_balance, balance_increase
 
-    print(interaction_df['action block_num amount reserve'.split(' ')])
+def update_target_debt_data(action_i, block_num, amount_i, token_name_i, 
+        rate_mode_i, liquidity_index, variable_borrow_index, stable_borrow_rate,
+        collateral_dict, collatearl_able_dict, variable_debt_dict, stable_debt_dict):
+    
+    
+    # ['int', 'liquidityRate'],  # 存钱利息
+    # ['int', 'stableBorrowRate'],  # 固定贷款利息
+    # ['int', 'variableBorrowRate'], # 可变贷款利息
+    # ['int', 'liquidityIndex'], # 存钱token价值指数
+    # ['int', 'variableBorrowIndex'], # 可变贷款token价值指数
+    # stable = 1, variable = 2
+    
+    a_token_amount_i = ray_div(amount_i, liquidity_index)
+    
+    variable_debt_amount_i = ray_div(amount_i, variable_borrow_index)
 
-    return HttpResponse("test")
+    # For Stable Debt
+    stable_debt_amount_i = amount_i #/ stable_borrow_rate
+    stable_debt_amount_p, stable_borrow_rate_p, block_num_p = stable_debt_dict[token_name_i]
+    if stable_debt_amount_p != None:
+        new_stable_balance, balance_increase = cal_stable_debt_change(stable_debt_amount_p, stable_borrow_rate_p, block_num, block_num_p)
+
+    if action_i == "ReserveUsedAsCollateralEnabled":
+        collatearl_able_dict[token_name_i] = True
+    elif action_i == "ReserveUsedAsCollateralDisabled":
+        collatearl_able_dict[token_name_i] = False
+    elif action_i == "Deposit":
+        if collatearl_able_dict[token_name_i] == False and collateral_dict[token_name_i] == 0:
+            collatearl_able_dict[token_name_i] = True
+        collateral_dict[token_name_i] += a_token_amount_i
+    elif action_i == 'Withdraw':
+        if (collateral_dict[token_name_i] - a_token_amount_i) < 0:
+            return False, np.abs(collateral_dict[token_name_i] - a_token_amount_i)
+        collateral_dict[token_name_i] -= a_token_amount_i
+    elif action_i == "Borrow":
+        if rate_mode_i == '1': # stable
+            if stable_debt_dict[token_name_i][0] is None:
+                stable_debt_dict[token_name_i] = [stable_debt_amount_i, stable_borrow_rate, block_num]
+            else:
+                stable_debt_dict[token_name_i] = [new_stable_balance + stable_debt_amount_i, stable_borrow_rate, block_num]
+        elif rate_mode_i == '2': # variable
+            variable_debt_dict[token_name_i] += variable_debt_amount_i
+        else:
+            assert False, "rate_mode_i error"
+    elif action_i == "Repay":
+        if rate_mode_i == '1':
+            if (new_stable_balance - stable_debt_amount_i) < 0:
+                return False, np.abs(new_stable_balance - stable_debt_amount_i)
+            stable_debt_dict[token_name_i] = [new_stable_balance - stable_debt_amount_i, stable_borrow_rate, block_num]
+        elif rate_mode_i == '2': # variable
+            if (variable_debt_dict[token_name_i] - variable_debt_amount_i) < 0:
+                return False, np.abs(variable_debt_dict[token_name_i] - variable_debt_amount_i)
+            variable_debt_dict[token_name_i] -= variable_debt_amount_i
+    elif action_i == 'RebalanceStableBorrowRate':
+        stable_debt_dict[token_name_i] = [new_stable_balance, stable_borrow_rate, block_num]
+    else:
+        assert False, "Interaction Data error"
+
+    return True, 0
+
+def get_token_value(block_num, index, 
+    collateral_dict, collatearl_able_dict, variable_debt_dict, stable_debt_dict,
+    reserves_status,
+    fix_decimal=False):
+    # collateral_dict = defaultdict(float)
+    # collatearl_able_dict = defaultdict(lambda :True)
+    # variable_debt_dict = defaultdict(float)
+    # stable_debt_dict = defaultdict(lambda : [None, None, None])
+    collateral_in_original_unit = defaultdict(float)
+    var_debt_in_original_unit = defaultdict(float)
+    sta_debt_in_original_unit = defaultdict(float)
+
+    block_n_index = combine_block_n_index(dict(block_num=block_num, index=index))
+
+    for token_name, able in collatearl_able_dict.items():
+        decimal_fixer = 1
+        if able:
+            tmp_status = reserves_status[(reserves_status['reserve'] == token_name) &\
+                 (reserves_status['block_n_index'] <= block_n_index)].copy().sort_values('block_n_index').iloc[-1,:]
+            if fix_decimal:
+                decimal_fixer = 10 ** decimal_dict[token_name]
+            collateral_in_original_unit[token_name] = ray_mul(collateral_dict[token_name], tmp_status["liquidity_index"]) / decimal_fixer
+    
+    for token_name, able in variable_debt_dict.items():
+        decimal_fixer = 1
+        tmp_status = reserves_status[(reserves_status['reserve'] == token_name) &\
+                 (reserves_status['block_n_index'] <= block_n_index)].copy().sort_values('block_n_index').iloc[-1,:]
+        if fix_decimal:
+            decimal_fixer = 10 ** decimal_dict[token_name]
+        var_debt_in_original_unit[token_name] = ray_mul(variable_debt_dict[token_name], tmp_status["variable_borrow_index"]) / decimal_fixer
+
+    for token_name, stable_debt in stable_debt_dict.items():
+        decimal_fixer = 1
+        if stable_debt[0] is not None:
+            stable_debt_amount_p, stable_borrow_rate_p, block_num_p = stable_debt_dict[token_name]
+            new_stable_balance, balance_increase = cal_stable_debt_change(stable_debt_amount_p, stable_borrow_rate_p, block_num, block_num_p)
+            if fix_decimal:
+                decimal_fixer = 10 ** decimal_dict[token_name]
+            sta_debt_in_original_unit[token_name] = new_stable_balance / decimal_fixer
+    return collateral_in_original_unit, var_debt_in_original_unit, sta_debt_in_original_unit
+
+def get_price_data(until_block_num, previous_block = 6424):
+    ttt = pd.DataFrame(
+        list(
+            BlockPrice.objects.filter(
+                Q(block_number__number__lte=until_block_num) &
+                Q(block_number__number__gte=(until_block_num - previous_block))
+            ).annotate(
+                block_num=F('block_number__number'),
+                oracle_name=F('token_pair__oracle__name'),
+                token0 = F('token_pair__token0'),
+                token1 = F('token_pair__token1'),
+            ).all().values()
+        )
+    )
+    return ttt.sort_values("block_num")
+
+def invert_transformation(df_train, df_forecast):
+    """Revert back the differencing to get the forecast to original scale."""
+    df_fc = df_forecast.copy()
+    columns = df_train.columns
+    for col in columns:        
+        # Roll back 1st Diff
+        df_fc[str(col)] = (df_train[col].iloc[-1] + df_fc[col].cumsum()) # np.exp(df_train[col].iloc[-1] + df_fc[col].cumsum())
+    return df_fc
+
+def cal_hf(price_prediction, token_value_dicts, liquidation_threshold_dict):
+    hf_list = []
+    for i in range(price_prediction.shape[0]):
+        collatearl_m_threshold_in_eth = 0
+        debt_m_threshold_in_eth = 0
+        for token_name, token_amount in token_value_dicts['collateral'].items():
+            if token_name == 'weth':
+                collatearl_m_threshold_in_eth += token_amount * liquidation_threshold_dict[token_name]
+            else:
+                collatearl_m_threshold_in_eth += token_amount * price_prediction['chainlink_' + token_name].loc[i]  * liquidation_threshold_dict[token_name]
+
+        for token_name, token_amount in token_value_dicts['var_debt'].items():
+            if token_name == 'weth':
+                debt_m_threshold_in_eth += token_amount
+            else:
+                debt_m_threshold_in_eth += token_amount * price_prediction['chainlink_' + token_name].loc[i]
+
+        for token_name, token_amount in token_value_dicts['sta_debt'].items():
+            if token_name == 'weth':
+                debt_m_threshold_in_eth += token_amount
+            else:
+                debt_m_threshold_in_eth += token_amount * price_prediction['chainlink_' + token_name].loc[i]
+        collatearl_m_threshold_in_eth, debt_m_threshold_in_eth
+
+        hf = (collatearl_m_threshold_in_eth/debt_m_threshold_in_eth)
+        hf_list.append(hf)
+    return pd.Series(hf_list)#, columns=['hf'])
+
+def cal_pct_be_liquidated(mc_simulation_row):
+    return (mc_simulation_row < 1).sum()/mc_simulation_row.count()
+
+
+
+TargetContract = ''
+ReservesStatusStart = LendingPoolUpdateSummary.objects.get_or_create(action="overall")[0].max_block_number
+ReservesStatusEnd = ReservesStatusStart - 6424
+ReservesStatusEndIndex = 100000
+StepAhead = 100
+MCAount = 1000
+hf_chart_done = False
+
+
+def healthfactor_chart_view(request):
+    have_data = False
+
+    summary = LendingPoolUpdateSummary.objects.get_or_create(action="overall")[0]
+    # summaries =BlockPriceUpdateRecord.objects.all()
+    latest_block_num = summary.max_block_number
+
+    if request.method == "POST":
+        global TargetContract, ReservesStatusStart, ReservesStatusEnd, StepAhead, MCAount, hf_chart_done, ReservesStatusEndIndex
+        # global StartBlock, EndBolck, Oracles
+        
+        ReservesStatusStart = int(request.POST.get("StartBlock", ReservesStatusStart))
+        ReservesStatusEnd = int(request.POST.get("EndBlock", ReservesStatusEnd))
+        ReservesStatusEndIndex = int(request.POST.get("EndIndex", ReservesStatusEndIndex))
+        TargetContract = int(request.POST.get("TargetContract", TargetContract))
+
+        interaction_df = get_interaction_data(TargetContract)
+        interaction_df = interaction_df[interaction_df['action'] != "LiquidationCall"]
+        if interaction_df.shape[0] != 0:
+            potential = True
+            other_token_counter = 0
+            for token in set(interaction_df['reserve'].to_list()):
+                if token not in token_dict.values():
+                    potential = False
+                    break
+            if potential:
+                have_data = True
+
+                hf_chart_done = False
+
+                t = threading.Thread(target=hf_chart,
+                                    args=(request,))
+                t.setDaemon(True)
+                t.start()
+
+
+    content = dict(
+        potential=potential,
+        have_data=have_data,
+        summary=summary,
+    )
+    
+    return render(request,"healthfactor_chart.html", content)
+
+
+hf_chart = None
+
+def hf_chart(request):
+    global hf_chart, hf_chart_done
+    reserves_status = get_reserves_status()
+    latest_block_num = reserves_status['block_num'].max()
+    interaction_df = get_interaction_data(TargetContract)
+
+    until_block_num = latest_block_num
+    until_block_num = ReservesStatusEnd
+    until_index = ReservesStatusEndIndex
+
+    until_block_n_index = combine_block_n_index({'block_num': until_block_num, 'index': until_index})
+    # liquidation_index = until_index
+
+    # Start Getting Data #####################################
+    liquidation_df = get_liquidation_call(TargetContract)
+
+    interaction_df = interaction_df['action block_num index on_behalf_of reserve amount rate_mode rate'.split(' ')].copy()
+    reserves_status = reserves_status[[
+        'reserve', 'block_num', 'index',  
+        'liquidity_rate', 'stable_borrow_rate', 'variable_borrow_rate', 
+        'liquidity_index','variable_borrow_index'
+    ]].copy()
+    liquidation_df = liquidation_df[[
+        'block_num', 'index', 'on_behalf_of', 
+        'collateral_asset', 'debt_asset', 'debt_to_cover', 'liquidated_collateral_amount',
+        'liquidator', 'receive_atoken']].copy()
+
+
+
+    interaction_df['block_n_index'] = interaction_df.apply(combine_block_n_index, axis=1)
+    reserves_status['block_n_index'] = reserves_status.apply(combine_block_n_index, axis=1)
+    liquidation_df['block_n_index'] = liquidation_df.apply(combine_block_n_index, axis=1)
+
+    interaction_df = interaction_df.sort_values('block_n_index').reset_index(drop=True)
+    reserves_status = reserves_status.sort_values('block_n_index').reset_index(drop=True)
+
+
+    # just give a random reserve address, will be swich in the following part
+    for index in interaction_df.index:
+        if interaction_df.loc[index, 'action'] == "LiquidationCall":
+            interaction_df.loc[index, 'reserve'] = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+
+    # merge
+    user_df = interaction_df.merge(reserves_status, on=['reserve'], how='left')
+    change_token_address_to_name = lambda x: revert_token_dict[x] if x in revert_token_dict else x
+    interaction_df['reserve'] = interaction_df['reserve'].apply(change_token_address_to_name).reset_index(drop=True)
+    user_df['reserve'] = user_df['reserve'].apply(change_token_address_to_name).reset_index(drop=True)
+    reserves_status['reserve'] = reserves_status['reserve'].apply(change_token_address_to_name).reset_index(drop=True)
+
+    liquidation_df['collateral_asset'] = liquidation_df['collateral_asset'].apply(change_token_address_to_name)
+    liquidation_df['debt_asset'] = liquidation_df['debt_asset'].apply(change_token_address_to_name)
+
+
+    def get_liquidation_data(df_row):
+        df_row = df_row.copy()
+        if df_row['action'] != 'LiquidationCall': return df_row
+        # collateral
+        block_n_index_x = df_row['block_n_index_x']
+        liquidation_row = liquidation_df[liquidation_df['block_n_index'] == block_n_index_x]
+        collateral_asset = liquidation_row['collateral_asset'].values[0]
+        tmp_reserves_status = reserves_status[\
+            (reserves_status['reserve'] == collateral_asset) &\
+            (reserves_status['block_n_index'] <= block_n_index_x)].copy().sort_values('block_n_index')
+        tmp_reserves_status = tmp_reserves_status.iloc[-1, :]
+
+        df_row['block_num_y'] = tmp_reserves_status['block_num']
+        df_row['index_y'] = tmp_reserves_status['index']
+        df_row['liquidity_rate'] = tmp_reserves_status['liquidity_rate']
+        df_row['liquidity_index'] = tmp_reserves_status['liquidity_index']
+        df_row['block_n_index_y'] = tmp_reserves_status['block_n_index']
+
+        debt_asset = liquidation_row['debt_asset'].values[0]
+        tmp_reserves_status = reserves_status[\
+            (reserves_status['reserve'] == debt_asset) &\
+            (reserves_status['block_n_index'] <= block_n_index_x)].copy().sort_values('block_n_index')
+        tmp_reserves_status = tmp_reserves_status.iloc[-1, :]
+
+        df_row['stable_borrow_rate'] = tmp_reserves_status['stable_borrow_rate']
+        df_row['variable_borrow_rate'] = tmp_reserves_status['variable_borrow_rate']
+        df_row['variable_borrow_index'] = tmp_reserves_status['variable_borrow_index']
+        
+        return df_row
+    
+    from_df = user_df[user_df['block_n_index_y'] <= user_df['block_n_index_x']]
+    from_df = from_df.loc[from_df.groupby('block_n_index_x').block_n_index_y.idxmax()].reset_index(drop=True)
+    from_df = from_df.apply(get_liquidation_data, axis=1)
+
+
+    # a token
+    collateral_dict = defaultdict(float)
+    collatearl_able_dict = defaultdict(lambda :True)
+    variable_debt_dict = defaultdict(float)
+    stable_debt_dict = defaultdict(lambda : [None, None, None]) # amount, interest, start time
+
+    sub_interaction_df = interaction_df[interaction_df['block_n_index'] <= until_block_n_index].copy()
+
+    
+
+
+
+class gen_hf_chart(APIView):
+    def get(self, request, *args, **kwargs):
+        # print("-----------------------------********************")
+        
+        if not hf_chart_done:
+            return JsonResponse("not done yet")
+        global hf_chart
+        return JsonResponse(json.loads(hf_chart))
+
+def debt_monitor_view(request):
+    pass
