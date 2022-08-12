@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 from django.shortcuts import render
 import ctypes
 from ctypes import c_char_p, cdll
@@ -11,10 +12,14 @@ from django.db import IntegrityError
 from django.db.models import Max, Min, Avg, Q, F
 from rest_framework.views import APIView 
 
+from pyecharts.charts import Line, Bar
+import pyecharts.options as opts
+
 from .models import *
 from datastorage.models import *
 from datavisualization.models import *
 from .help_function import *
+from .debt_function import *
 
 import pandas as pd
 import numpy as np
@@ -505,9 +510,6 @@ def auto_update(request):
                     """)
         else: print(f"invalid block range {request.POST['block_from']} {request.POST['block_to']}")
     
-    
-
-
 
 def auto_update_view(request):
     t = threading.Thread(target=auto_update,
@@ -550,290 +552,20 @@ JsonResponse = json_response
 JsonError = json_error
 
 
-
-
-
-token_dict = dict(
-    usdc = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-    usdt = '0xdac17f958d2ee523a2206206994597c13d831ec7',
-    dai =  '0x6b175474e89094c44da98b954eedeac495271d0f',
-    # common collateral asset
-    weth = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-)
-decimal_dict = dict(
-    usdc = 6,
-    usdt = 6,
-    dai =  18,
-    # common collateral asset
-    weth = 18
-)
-
-liquidation_threshold_dict = dict(
-    usdc = 0.88,
-    usdt = None, # not allowed as collateral
-    dai =  0.8,
-    # common collateral asset
-    weth = 0.85
-)
-revert_token_dict = {v: k for k, v in token_dict.items()}
-
-def get_potential_target():
-    data = pd.DataFrame(
-        list(
-            LendingPoolInteraction.objects.all().values()
-        )
-    )
-    return data['on_behalf_of'].unique().tolist()
-
-
-def get_interaction_data(target):
-    data = pd.DataFrame(
-        list(
-            LendingPoolInteraction.objects.filter(
-                on_behalf_of=target
-            ).annotate(
-                 block_num=F('block_number__number'),
-            ).all().values()
-        )
-    )
-    return data
-
-def get_reserves_status():
-    data = pd.DataFrame(
-        list(
-            ReservesStatus.objects.annotate(
-                 block_num=F('block_number__number'),
-            ).all().values()
-        )
-    )
-    return data
-
-def get_liquidation_call(target=None):
-    if target is None:
-        data = pd.DataFrame(
-            list(
-                LiquidationCall.objects.annotate(
-                    block_num=F('block_number__number'),
-                ).all().values()
-            )
-        )
-    else:
-        data = pd.DataFrame(
-            list(
-                LiquidationCall.objects.filter(
-                    on_behalf_of=target
-                ).annotate(
-                    block_num=F('block_number__number'),
-                ).all().values()
-            )
-        )
-    return data
-
-# Block Time
-def get_block_time(block_num):
-    __library = cdll.LoadLibrary('../eth_crawler/library.so')
-
-    get_single_block_time = __library.get_single_block_time
-    get_single_block_time.argtypes = [c_char_p, GoInt]
-    get_single_block_time.restype = c_char_p
-    try:
-        res = get_single_block_time(
-            archive_node.encode(), 
-            GoInt(int(block_num))
-        )
-        res = res.decode("utf-8")
-        res = json.loads(s=res)#.items()#, columns=['BlockNum', 'Timestamp'])
-        
-        return res[str(block_num)]
-    except Exception as e: 
-        print(e)
-
-def cal_stable_debt_change(stable_debt_amount_p, stable_borrow_rate_p, block_num, block_num_p):
-    block_time = get_block_time(block_num)
-    block_time_p = get_block_time(block_num_p)
-    exp = block_time - block_time_p
-    
-    ###### Reference #####: https://etherscan.io/address/0xc6845a5c768bf8d7681249f8927877efda425baf#code
-    expMinusOne = exp - 1
-    expMinusTwo = exp - 2 if exp > 2 else 0
-    ratePerSecond = stable_borrow_rate_p / SECONDS_PER_YEAR
-    basePowerTwo = ray_mul(ratePerSecond, ratePerSecond) # (ratePerSecond * ratePerSecond + 0.5 * RAY)/RAY
-    basePowerThree = ray_mul(basePowerTwo, ratePerSecond)#  + 0.5 * RAY)/RAY
-    secondTerm = (exp * expMinusOne * basePowerTwo) / 2
-    thirdTerm = (exp * expMinusOne * expMinusTwo * basePowerThree) / 6
-    compounded_interest = RAY + (ratePerSecond * exp) + (secondTerm) + (thirdTerm)
-    new_stable_balance = ray_mul(stable_debt_amount_p, compounded_interest)
-    balance_increase = new_stable_balance - stable_debt_amount_p
-    ########################################################################
-
-    return new_stable_balance, balance_increase
-
-def update_target_debt_data(action_i, block_num, amount_i, token_name_i, 
-        rate_mode_i, liquidity_index, variable_borrow_index, stable_borrow_rate,
-        collateral_dict, collatearl_able_dict, variable_debt_dict, stable_debt_dict):
-    
-    
-    # ['int', 'liquidityRate'],  # 存钱利息
-    # ['int', 'stableBorrowRate'],  # 固定贷款利息
-    # ['int', 'variableBorrowRate'], # 可变贷款利息
-    # ['int', 'liquidityIndex'], # 存钱token价值指数
-    # ['int', 'variableBorrowIndex'], # 可变贷款token价值指数
-    # stable = 1, variable = 2
-    
-    a_token_amount_i = ray_div(amount_i, liquidity_index)
-    
-    variable_debt_amount_i = ray_div(amount_i, variable_borrow_index)
-
-    # For Stable Debt
-    stable_debt_amount_i = amount_i #/ stable_borrow_rate
-    stable_debt_amount_p, stable_borrow_rate_p, block_num_p = stable_debt_dict[token_name_i]
-    if stable_debt_amount_p != None:
-        new_stable_balance, balance_increase = cal_stable_debt_change(stable_debt_amount_p, stable_borrow_rate_p, block_num, block_num_p)
-
-    if action_i == "ReserveUsedAsCollateralEnabled":
-        collatearl_able_dict[token_name_i] = True
-    elif action_i == "ReserveUsedAsCollateralDisabled":
-        collatearl_able_dict[token_name_i] = False
-    elif action_i == "Deposit":
-        if collatearl_able_dict[token_name_i] == False and collateral_dict[token_name_i] == 0:
-            collatearl_able_dict[token_name_i] = True
-        collateral_dict[token_name_i] += a_token_amount_i
-    elif action_i == 'Withdraw':
-        if (collateral_dict[token_name_i] - a_token_amount_i) < 0:
-            return False, np.abs(collateral_dict[token_name_i] - a_token_amount_i)
-        collateral_dict[token_name_i] -= a_token_amount_i
-    elif action_i == "Borrow":
-        if rate_mode_i == '1': # stable
-            if stable_debt_dict[token_name_i][0] is None:
-                stable_debt_dict[token_name_i] = [stable_debt_amount_i, stable_borrow_rate, block_num]
-            else:
-                stable_debt_dict[token_name_i] = [new_stable_balance + stable_debt_amount_i, stable_borrow_rate, block_num]
-        elif rate_mode_i == '2': # variable
-            variable_debt_dict[token_name_i] += variable_debt_amount_i
-        else:
-            assert False, "rate_mode_i error"
-    elif action_i == "Repay":
-        if rate_mode_i == '1':
-            if (new_stable_balance - stable_debt_amount_i) < 0:
-                return False, np.abs(new_stable_balance - stable_debt_amount_i)
-            stable_debt_dict[token_name_i] = [new_stable_balance - stable_debt_amount_i, stable_borrow_rate, block_num]
-        elif rate_mode_i == '2': # variable
-            if (variable_debt_dict[token_name_i] - variable_debt_amount_i) < 0:
-                return False, np.abs(variable_debt_dict[token_name_i] - variable_debt_amount_i)
-            variable_debt_dict[token_name_i] -= variable_debt_amount_i
-    elif action_i == 'RebalanceStableBorrowRate':
-        stable_debt_dict[token_name_i] = [new_stable_balance, stable_borrow_rate, block_num]
-    else:
-        assert False, "Interaction Data error"
-
-    return True, 0
-
-def get_token_value(block_num, index, 
-    collateral_dict, collatearl_able_dict, variable_debt_dict, stable_debt_dict,
-    reserves_status,
-    fix_decimal=False):
-    # collateral_dict = defaultdict(float)
-    # collatearl_able_dict = defaultdict(lambda :True)
-    # variable_debt_dict = defaultdict(float)
-    # stable_debt_dict = defaultdict(lambda : [None, None, None])
-    collateral_in_original_unit = defaultdict(float)
-    var_debt_in_original_unit = defaultdict(float)
-    sta_debt_in_original_unit = defaultdict(float)
-
-    block_n_index = combine_block_n_index(dict(block_num=block_num, index=index))
-
-    for token_name, able in collatearl_able_dict.items():
-        decimal_fixer = 1
-        if able:
-            tmp_status = reserves_status[(reserves_status['reserve'] == token_name) &\
-                 (reserves_status['block_n_index'] <= block_n_index)].copy().sort_values('block_n_index').iloc[-1,:]
-            if fix_decimal:
-                decimal_fixer = 10 ** decimal_dict[token_name]
-            collateral_in_original_unit[token_name] = ray_mul(collateral_dict[token_name], tmp_status["liquidity_index"]) / decimal_fixer
-    
-    for token_name, able in variable_debt_dict.items():
-        decimal_fixer = 1
-        tmp_status = reserves_status[(reserves_status['reserve'] == token_name) &\
-                 (reserves_status['block_n_index'] <= block_n_index)].copy().sort_values('block_n_index').iloc[-1,:]
-        if fix_decimal:
-            decimal_fixer = 10 ** decimal_dict[token_name]
-        var_debt_in_original_unit[token_name] = ray_mul(variable_debt_dict[token_name], tmp_status["variable_borrow_index"]) / decimal_fixer
-
-    for token_name, stable_debt in stable_debt_dict.items():
-        decimal_fixer = 1
-        if stable_debt[0] is not None:
-            stable_debt_amount_p, stable_borrow_rate_p, block_num_p = stable_debt_dict[token_name]
-            new_stable_balance, balance_increase = cal_stable_debt_change(stable_debt_amount_p, stable_borrow_rate_p, block_num, block_num_p)
-            if fix_decimal:
-                decimal_fixer = 10 ** decimal_dict[token_name]
-            sta_debt_in_original_unit[token_name] = new_stable_balance / decimal_fixer
-    return collateral_in_original_unit, var_debt_in_original_unit, sta_debt_in_original_unit
-
-def get_price_data(until_block_num, previous_block = 6424):
-    ttt = pd.DataFrame(
-        list(
-            BlockPrice.objects.filter(
-                Q(block_number__number__lte=until_block_num) &
-                Q(block_number__number__gte=(until_block_num - previous_block))
-            ).annotate(
-                block_num=F('block_number__number'),
-                oracle_name=F('token_pair__oracle__name'),
-                token0 = F('token_pair__token0'),
-                token1 = F('token_pair__token1'),
-            ).all().values()
-        )
-    )
-    return ttt.sort_values("block_num")
-
-def invert_transformation(df_train, df_forecast):
-    """Revert back the differencing to get the forecast to original scale."""
-    df_fc = df_forecast.copy()
-    columns = df_train.columns
-    for col in columns:        
-        # Roll back 1st Diff
-        df_fc[str(col)] = (df_train[col].iloc[-1] + df_fc[col].cumsum()) # np.exp(df_train[col].iloc[-1] + df_fc[col].cumsum())
-    return df_fc
-
-def cal_hf(price_prediction, token_value_dicts, liquidation_threshold_dict):
-    hf_list = []
-    for i in range(price_prediction.shape[0]):
-        collatearl_m_threshold_in_eth = 0
-        debt_m_threshold_in_eth = 0
-        for token_name, token_amount in token_value_dicts['collateral'].items():
-            if token_name == 'weth':
-                collatearl_m_threshold_in_eth += token_amount * liquidation_threshold_dict[token_name]
-            else:
-                collatearl_m_threshold_in_eth += token_amount * price_prediction['chainlink_' + token_name].loc[i]  * liquidation_threshold_dict[token_name]
-
-        for token_name, token_amount in token_value_dicts['var_debt'].items():
-            if token_name == 'weth':
-                debt_m_threshold_in_eth += token_amount
-            else:
-                debt_m_threshold_in_eth += token_amount * price_prediction['chainlink_' + token_name].loc[i]
-
-        for token_name, token_amount in token_value_dicts['sta_debt'].items():
-            if token_name == 'weth':
-                debt_m_threshold_in_eth += token_amount
-            else:
-                debt_m_threshold_in_eth += token_amount * price_prediction['chainlink_' + token_name].loc[i]
-        collatearl_m_threshold_in_eth, debt_m_threshold_in_eth
-
-        hf = (collatearl_m_threshold_in_eth/debt_m_threshold_in_eth)
-        hf_list.append(hf)
-    return pd.Series(hf_list)#, columns=['hf'])
-
-def cal_pct_be_liquidated(mc_simulation_row):
-    return (mc_simulation_row < 1).sum()/mc_simulation_row.count()
-
-
-
-TargetContract = ''
+TargetContract = '0xb1b7f5dd1173c180eba4d91f8e78559e8a0b8b11'
 ReservesStatusStart = LendingPoolUpdateSummary.objects.get_or_create(action="overall")[0].max_block_number
-ReservesStatusEnd = ReservesStatusStart - 6424
+PreviousBlockForTrain = 6424
+ReservesStatusEnd = ReservesStatusStart - PreviousBlockForTrain
 ReservesStatusEndIndex = 100000
 StepAhead = 100
-MCAount = 1000
-hf_chart_done = False
+MCAmount = 1000
+HFChartDone = False
+
+HF_chart = None
+HF_previous_chart = None
+Previous_chart_done = False
+MC_chart = None
+DebtData = None
 
 
 def healthfactor_chart_view(request):
@@ -843,14 +575,22 @@ def healthfactor_chart_view(request):
     # summaries =BlockPriceUpdateRecord.objects.all()
     latest_block_num = summary.max_block_number
 
+    potential=False
+
     if request.method == "POST":
-        global TargetContract, ReservesStatusStart, ReservesStatusEnd, StepAhead, MCAount, hf_chart_done, ReservesStatusEndIndex
+        global TargetContract, ReservesStatusStart, ReservesStatusEnd, StepAhead, MCAmount, HFChartDone, ReservesStatusEndIndex, PreviousBlockForTrain, Previous_chart_done
         # global StartBlock, EndBolck, Oracles
         
-        ReservesStatusStart = int(request.POST.get("StartBlock", ReservesStatusStart))
+        # ReservesStatusStart = int(request.POST.get("StartBlock", ReservesStatusStart))
         ReservesStatusEnd = int(request.POST.get("EndBlock", ReservesStatusEnd))
         ReservesStatusEndIndex = int(request.POST.get("EndIndex", ReservesStatusEndIndex))
-        TargetContract = int(request.POST.get("TargetContract", TargetContract))
+        # PreviousBlockForTrain = ReservesStatusStart - ReservesStatusEnd
+        PreviousBlockForTrain = int(request.POST.get("PreviousBlockForTrain", ReservesStatusEndIndex))
+
+        StepAhead = int(request.POST.get("StepAhead", StepAhead))
+        MCAmount = int(request.POST.get("MCAmount", MCAmount))
+
+        TargetContract = request.POST.get("TargetContract", TargetContract)
 
         interaction_df = get_interaction_data(TargetContract)
         interaction_df = interaction_df[interaction_df['action'] != "LiquidationCall"]
@@ -864,27 +604,36 @@ def healthfactor_chart_view(request):
             if potential:
                 have_data = True
 
-                hf_chart_done = False
+                HFChartDone = False
+                Previous_chart_done=False
 
-                t = threading.Thread(target=hf_chart,
-                                    args=(request,))
+                t = threading.Thread(target=gen_hf_chart)
                 t.setDaemon(True)
                 t.start()
 
 
     content = dict(
+        step_ahead=StepAhead,
+        mc_amount=MCAmount,
         potential=potential,
         have_data=have_data,
+        reserve_status_end=ReservesStatusEnd,
         summary=summary,
+        previous_block_for_train=PreviousBlockForTrain,
+        reserves_status_end_index=ReservesStatusEndIndex,
+        # previous_block_for_train=PreviousBlockForTrain,
+        target_contract=TargetContract,
     )
     
-    return render(request,"healthfactor_chart.html", content)
+    return render(request,"hf_chart.html", content)
 
 
-hf_chart = None
 
-def hf_chart(request):
-    global hf_chart, hf_chart_done
+
+def gen_hf_chart():
+    print('-------- START genarting hf chart --------')
+    global HF_chart, HFChartDone, MC_chart, HF_previous_chart, Previous_chart_done
+
     reserves_status = get_reserves_status()
     latest_block_num = reserves_status['block_num'].max()
     interaction_df = get_interaction_data(TargetContract)
@@ -979,18 +728,313 @@ def hf_chart(request):
 
     sub_interaction_df = interaction_df[interaction_df['block_n_index'] <= until_block_n_index].copy()
 
+    for index_i in sub_interaction_df.index:
+
+        action_i = sub_interaction_df.loc[index_i, 'action']
+        block_n_index = sub_interaction_df.loc[index_i, 'block_n_index']
+        block_num = sub_interaction_df.loc[index_i, 'block_num']
+        index = sub_interaction_df.loc[index_i, 'index']
+
+        # block_time = get_block_time(block_num)
+        before_data = from_df[from_df['block_n_index_x'] == block_n_index]#['amount'].values[0]
+        liquidity_index = before_data['liquidity_index'].values[0]
+        variable_borrow_index = before_data['variable_borrow_index'].values[0]
+        stable_borrow_rate = before_data['stable_borrow_rate'].values[0]
+        
+        if action_i == "LiquidationCall":
+            'collateral_asset', 'debt_asset', 'debt_to_cover', 'liquidated_collateral_amount',
+            liquidation_i = liquidation_df[liquidation_df['block_n_index'] == block_n_index].copy().reset_index(drop=True)
+            collateral_asset = liquidation_i.loc[0, 'collateral_asset']
+            debt_asset = liquidation_i.loc[0, 'debt_asset']
+            debt_to_cover = liquidation_i.loc[0, 'debt_to_cover']
+            liquidated_collateral_amount = liquidation_i.loc[0, 'liquidated_collateral_amount']
+
+            # a_token_amount_i = ray_div(liquidated_collateral_amount, liquidity_index)
+            # collateral_dict[collateral_asset] -= a_token_amount_i
+
+            collateral_in_original_unit, var_debt_in_original_unit, sta_debt_in_original_unit = get_token_value(block_num, index)
+
+            if var_debt_in_original_unit[debt_asset] < debt_to_cover:
+                var_debt_to_liquidate = var_debt_in_original_unit[debt_asset]
+                sta_debt_to_repay = debt_to_cover - var_debt_to_liquidate
+            else:
+                var_debt_to_liquidate = debt_to_cover
+                sta_debt_to_repay = 0
+
+            success, remaining_token = update_target_debt_data(
+                    "Repay", block_num, var_debt_to_liquidate, debt_asset, 
+                    "2", liquidity_index, variable_borrow_index, stable_borrow_rate,
+                    collateral_dict, collatearl_able_dict, variable_debt_dict, stable_debt_dict
+                )
+            assert success
+
+            if sta_debt_to_repay > 0:
+                success, remaining_token = update_target_debt_data(
+                    "Repay", block_num, sta_debt_to_repay, debt_asset, 
+                    "1", liquidity_index, variable_borrow_index, stable_borrow_rate,
+                    collateral_dict, collatearl_able_dict, variable_debt_dict, stable_debt_dict
+                )
+                assert success
+            
+            success, remaining_token = update_target_debt_data(
+                "Withdraw", block_num, liquidated_collateral_amount, collateral_asset, 
+                "-1", liquidity_index, variable_borrow_index, stable_borrow_rate,
+                collateral_dict, collatearl_able_dict, variable_debt_dict, stable_debt_dict
+            )
+            assert success
+
+        else:
+            amount_i = sub_interaction_df.loc[index_i, 'amount']
+            token_name_i = sub_interaction_df.loc[index_i, 'reserve']
+            rate_mode_i = sub_interaction_df.loc[index_i, 'rate_mode']
+
+            update_target_debt_data(action_i, block_num, amount_i, token_name_i, 
+            rate_mode_i, liquidity_index, variable_borrow_index, stable_borrow_rate,
+            collateral_dict, collatearl_able_dict, variable_debt_dict, stable_debt_dict)
     
+    
+    token_value_dicts = get_token_value(until_block_num, until_index, 
+                            collateral_dict, collatearl_able_dict, variable_debt_dict, stable_debt_dict,
+                            reserves_status,
+                            fix_decimal=True
+                        )
+
+    # collateral, var_debt, sta_debt
+    token_value_dicts = {i:j for i,j in zip(['collateral', 'var_debt', 'sta_debt'], token_value_dicts)}
+
+    price_data = get_price_data(until_block_num, previous_block=PreviousBlockForTrain)
+    price_data['token0'] = price_data['token0'].apply(lambda x: 'weth' if x == 'eth' else x)
+    price_data['token1'] = price_data['token1'].apply(lambda x: 'weth' if x == 'eth' else x)
+    price_data = price_data[['block_num', 'oracle_name', 'token0', 'token1', 'current']]
+
+    block_num_df = pd.DataFrame(
+        range(
+            price_data.block_num.min(), 
+            until_block_num + 1
+        ),
+        columns=['block_num']
+    )
+    block_num_df.set_index('block_num', inplace=True)
+
+    uniswapv3_price_dict = {}
+    for token in ['usdt', 'dai', 'usdc']:
+        sub_price_df = price_data[(price_data['oracle_name'] == 'uniswapv3') & (price_data['token1'] == token)].copy()
+        sub_price_df[f'{token}'] = 1/sub_price_df['current']
+        sub_price_df.set_index('block_num', inplace=True)
+        sub_price_df = sub_price_df.merge(block_num_df, how='right', left_index=True, right_index=True)
+        sub_price_df.fillna(method='ffill', inplace=True)
+        sub_price_df.fillna(method='bfill', inplace=True)
+        uniswapv3_price_dict[token] = sub_price_df[token]
+    chainlink_price_dict ={}
+    for token in ['usdt', 'dai', 'usdc']:
+        sub_price_df = price_data[(price_data['oracle_name'] == 'chainlink') & (price_data['token0'] == token)].copy()
+        sub_price_df[f'{token}'] = sub_price_df['current']
+        sub_price_df.set_index('block_num', inplace=True)
+        sub_price_df = sub_price_df.merge(block_num_df, how='right', left_index=True, right_index=True)
+        sub_price_df.fillna(method='ffill', inplace=True)
+        sub_price_df.fillna(method='bfill', inplace=True)
+        chainlink_price_dict[token] = sub_price_df[token]
+
+    collatearl_in_eth = 0
+    debt_in_eth = 0
+    for token_name, token_amount in token_value_dicts['collateral'].items():
+        if token_name == 'weth':
+            collatearl_in_eth += token_amount
+        else:
+            collatearl_in_eth += token_amount * chainlink_price_dict[token_name].loc[until_block_num]
+
+    for token_name, token_amount in token_value_dicts['var_debt'].items():
+        if token_name == 'weth':
+            debt_in_eth += token_amount
+        else:
+            debt_in_eth += token_amount * chainlink_price_dict[token_name].loc[until_block_num]
+
+    for token_name, token_amount in token_value_dicts['sta_debt'].items():
+        if token_name == 'weth':
+            debt_in_eth += token_amount
+        else:
+            debt_in_eth += token_amount * chainlink_price_dict[token_name].loc[until_block_num]
+
+    collatearl_m_threshold_in_eth = 0
+    debt_m_threshold_in_eth = 0
+    for token_name, token_amount in token_value_dicts['collateral'].items():
+        if token_name == 'weth':
+            collatearl_m_threshold_in_eth += token_amount * liquidation_threshold_dict[token_name]
+        else:
+            collatearl_m_threshold_in_eth += token_amount * chainlink_price_dict[token_name].loc[until_block_num]  * liquidation_threshold_dict[token_name]
+
+    for token_name, token_amount in token_value_dicts['var_debt'].items():
+        if token_name == 'weth':
+            debt_m_threshold_in_eth += token_amount
+        else:
+            debt_m_threshold_in_eth += token_amount * chainlink_price_dict[token_name].loc[until_block_num]
+
+    for token_name, token_amount in token_value_dicts['sta_debt'].items():
+        if token_name == 'weth':
+            debt_m_threshold_in_eth += token_amount
+        else:
+            debt_m_threshold_in_eth += token_amount * chainlink_price_dict[token_name].loc[until_block_num]
+    collatearl_m_threshold_in_eth, debt_m_threshold_in_eth
+
+    current_healthfactor = (collatearl_m_threshold_in_eth/debt_m_threshold_in_eth)
+
+    used_token_list = []
+    price_data_list = []
+    price_name_list = []
+    for asset_from in ['collateral', 'var_debt', 'sta_debt']:
+        for token_name in ['usdc', 'usdt', 'dai']:
+        # for token_name, token_amount in token_value_dicts[asset_from].items():
+            if token_name == 'weth': continue
+            if token_name not in used_token_list:
+                used_token_list.append(token_name)
+                price_data_list.append(chainlink_price_dict[token_name])
+                price_name_list.append(f'chainlink_{token_name}')
+                price_data_list.append(uniswapv3_price_dict[token_name])
+                price_name_list.append(f'uniswapv3_{token_name}')
+    var_train_df = pd.concat(price_data_list, axis=1)
+    var_train_df.columns = price_name_list
+    var_train_df = var_train_df.reset_index(drop=False)
+
+    hf_actual_series = cal_hf(var_train_df, token_value_dicts, liquidation_threshold_dict)
+    hf_actual_series.index = var_train_df['block_num']
+
+    line = Line()
+    line.add_xaxis((hf_actual_series.index+1).to_list())
+    line.add_yaxis(
+        'Health Factor', 
+        hf_actual_series.to_list(), 
+        symbol="circle",
+        symbol_size=1,
+        label_opts=opts.LabelOpts(is_show=False),
+    )
+    line.add_yaxis(
+        'HF = 1', 
+        [1 for _ in range(len(hf_actual_series))], 
+        symbol="circle",
+        symbol_size=1,
+        label_opts=opts.LabelOpts(is_show=False),
+    )
+    line = line.set_global_opts(
+        title_opts=opts.TitleOpts(title="HF Previous Plot"),
+        xaxis_opts=opts.AxisOpts(
+            type_="value", 
+            is_scale=True,
+            name="Block Number",
+        ),
+        yaxis_opts=opts.AxisOpts(
+            type_="value",
+            # axistick_opts=opts.AxisTickOpts(is_show=True),
+            splitline_opts=opts.SplitLineOpts(is_show=True),
+            is_scale=True,
+            name="Health Factor",
+        ),
+    )
+    HF_previous_chart = line.dump_options_with_quotes()
+    Previous_chart_done=True
+
+    train_data = var_train_df.set_index('block_num')
+    # test_data = var_train_df[(int(len(var_train_df)*train_test_split)+1):].set_index('block_num')
+    tmp_df = train_data.copy()#.set_index('block_num')
+    # log_df = np.log(tmp_df)
+    log_f_diff = tmp_df.diff().dropna() 
+    log_f_diff = log_f_diff.reset_index(drop=True)
+    train_success = False
+
+    trained_var = get_var_result(log_f_diff, maxlags=None)
+
+    # maxlags = 100
+
+    # while not train_success:
+    #     try:
+    #         trained_var = get_var_result(log_f_diff, maxlags=maxlags)
+    #         train_success = True
+    #     except ValueError:
+            
+    #         maxlags -= 2
+
+    #         if maxlags < 0:
+    #             print(maxlags)
+    #             break
+            
+    # assert train_success, 'Failed to train VAR, not enough data (previous)'
 
 
+    def mc_simulate(df, step=240):
+        price_diff_prediction = pd.DataFrame(trained_var.simulate_var(step), columns=log_f_diff.columns)
+        price_prediction = invert_transformation(tmp_df, price_diff_prediction) 
+        hf_df = cal_hf(price_prediction, token_value_dicts, liquidation_threshold_dict)
+        return hf_df
 
-class gen_hf_chart(APIView):
+    mc_hf = pd.DataFrame(range(MCAmount)).parallel_apply(mc_simulate, args=(StepAhead,), axis=1).T
+    # vertical_liquidation_pct = mc_hf.parallel_apply(lambda x: (x < 1).any(), axis=0)
+    horizontal_liquidation_pct = mc_hf.parallel_apply(cal_pct_be_liquidated, axis=1)#.plot()
+    # mc_hf.plot(legend=False)
+
+    line = Line()
+    line.add_xaxis((horizontal_liquidation_pct.index+1).to_list())
+    line.add_yaxis(
+        'probability to be liquidated', 
+        horizontal_liquidation_pct.to_list(), 
+        symbol="circle",
+        symbol_size=1,
+        label_opts=opts.LabelOpts(is_show=False),
+    )
+    line = line.set_global_opts(
+        title_opts=opts.TitleOpts(title="HF Plot"),
+        xaxis_opts=opts.AxisOpts(
+            type_="value", 
+            is_scale=True,
+            name="Step Ahead",
+        ),
+        yaxis_opts=opts.AxisOpts(
+            type_="value",
+            # axistick_opts=opts.AxisTickOpts(is_show=True),
+            splitline_opts=opts.SplitLineOpts(is_show=True),
+            is_scale=True,
+            name="Probability of HF below 1",
+        ),
+    )
+
+    line = line.dump_options_with_quotes()
+    # line = json.loads(line)
+
+    HF_chart = line
+    HFChartDone = True
+
+    # MC_chart = 1
+    global DebtData
+    DebtData = dict(
+        collatearl_in_eth=collatearl_in_eth, 
+        debt_in_eth=debt_in_eth,
+        current_healthfactor=current_healthfactor,
+    )
+
+
+class get_hf_chart(APIView):
     def get(self, request, *args, **kwargs):
         # print("-----------------------------********************")
         
-        if not hf_chart_done:
-            return JsonResponse("not done yet")
-        global hf_chart
-        return JsonResponse(json.loads(hf_chart))
+        if not HFChartDone:
+            line = Line()
+            line = line.set_global_opts(title_opts=opts.TitleOpts(title="Plot Generating..."))
+            line = line.dump_options_with_quotes()
+            line = json.loads(line)
+            return JsonResponse(line)
+        global HF_chart
+        return JsonResponse(json.loads(HF_chart))
+
+class get_hf_previous_chart(APIView):
+    def get(self, request, *args, **kwargs):
+        # print("-----------------------------********************")
+        
+        if not Previous_chart_done:
+            line = Line()
+            line = line.set_global_opts(title_opts=opts.TitleOpts(title="Plot Generating..."))
+            line = line.dump_options_with_quotes()
+            line = json.loads(line)
+            return JsonResponse(line)
+        global HF_previous_chart
+        return JsonResponse(json.loads(HF_previous_chart))
 
 def debt_monitor_view(request):
     pass

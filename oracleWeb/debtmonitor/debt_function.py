@@ -36,6 +36,11 @@ from pandarallel import pandarallel
 pandarallel.initialize(progress_bar=False)
 
 
+__library = cdll.LoadLibrary('../eth_crawler/library.so')
+get_single_block_time = __library.get_single_block_time
+get_single_block_time.argtypes = [c_char_p, GoInt]
+get_single_block_time.restype = c_char_p
+
 
 SECONDS_PER_YEAR = 365 * 24 * 60 * 60
 RAY = 1e27
@@ -124,11 +129,6 @@ def get_liquidation_call(target=None):
 
 # Block Time
 def get_block_time(block_num):
-    __library = cdll.LoadLibrary('../eth_crawler/library.so')
-
-    get_single_block_time = __library.get_single_block_time
-    get_single_block_time.argtypes = [c_char_p, GoInt]
-    get_single_block_time.restype = c_char_p
     try:
         res = get_single_block_time(
             archive_node.encode(), 

@@ -1,0 +1,83 @@
+{% block content %}
+
+<head>
+    <script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+    <script type="text/javascript" src="https://assets.pyecharts.org/assets/echarts.min.js"></script>
+</head>
+
+<body>
+    avaliable latest data: block {{summary.max_block_number}}
+    <form action="healthfactor_chart_view" method="post">
+        
+        Previous Block For Train <input type="number" value={{previous_block_for_train}} name="PreviousBlockForTrain" />
+        Block End with: <input type="number" value={{reserve_status_end}} name="EndBlock" />
+        Index End with: <input type="number" value={{reserves_status_end_index}} name="EndIndex" />
+        
+        Target Contract Address: <input type="text" value="{{target_contract}}" name="TargetContract" />
+
+        MC Amount: <input type="number" value={{mc_amount}} name="MCAmount" />
+        Step Ahead: <input type="number" value={{step_ahead}} name="StepAhead" />
+
+        <input type="submit" value="submit">
+    </form>
+
+    {% if potential == True %}
+    {{target_contract}} is a valid contract (with only WETH/DAI/USDC/USDT in its AAVE)
+    {% endif %}
+
+    <br>
+    <div id="line_chart" style="width:1000px; height:600px;"></div>
+    <div id="line_chart2" style="width:1000px; height:600px;"></div>
+    {% if have_data == True %}
+    <script>
+        // var chart = echarts.init(document.getElementById('line_chart'), 'white', {renderer: 'canvas'});
+        // $(
+        //     function () {
+        //         chart.setOption({{line}});
+        //     }
+        // );
+
+        var chart = echarts.init(document.getElementById('line_chart'), 'white', {renderer: 'canvas'});
+        var chart2 = echarts.init(document.getElementById('line_chart2'), 'white', {renderer: 'canvas'});
+        // console.log("123")
+        $(
+            function () {
+                fetchData(chart);
+                fetchData2(chart2);
+                setInterval(fetchData, 2000);
+                setInterval(fetchData2, 2000);
+            }
+        );
+
+        function fetchData() {
+            $.ajax({
+                type: "GET",
+                url: "/debtmonitor/get_hf_previous_chart",
+                dataType: 'json',
+                success: function (result) {
+                    chart.setOption(result.data);
+                }
+            });
+        }
+
+        function fetchData2() {
+            $.ajax({
+                type: "GET",
+                url: "/debtmonitor/get_hf_chart",
+                dataType: 'json',
+                success: function (result) {
+                    chart2.setOption(result.data);
+                }
+            });
+        }
+    </script>
+
+    
+    {% endif %}
+
+<!-- {{line}} -->
+</body>
+
+
+
+{% endblock %}
