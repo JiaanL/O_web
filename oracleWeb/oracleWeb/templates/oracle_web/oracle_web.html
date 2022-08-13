@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+
+  
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Oracle Web">
+    <meta name="author" content="Jiaan Lin">
+
+    <title>Oracle Web</title>
+
+    <!-- <link rel="canonical" href="https://getbootstrap.com/docs/4.0/examples/cover/"> -->
+
+
+    <link href="{{STATIC_URL}}/static/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'oracle_web/cover.css' %}">
+  </head>
+  <body class="text-center">
+    <!-- ############################ Data Storage ############################ -->
+    <div class="cover-container d-flex h-100 p-3 mx-auto flex-column">
+      <header class="masthead mb-auto">
+        <div class="inner">
+          <!-- <h3 class="masthead-brand">Oracle and Lending DeFi Monitor</h3> -->
+          <nav class="nav nav-masthead justify-content-center">
+            <a class="nav-link active" href="#">Home</a>
+            <a class="nav-link" href="#">Features</a>
+            <a class="nav-link" href="#">Contact</a>
+          </nav>
+        </div>
+      </header>
+
+      <br /><br /><br /><br /><br />
+
+      <main role="main" class="inner cover">
+        <h1 class="cover-heading">1 - Data Storage.</h1>
+        <p class="lead">
+          The Summary of the log data in our database, including
+          price update log data from UniswapV2/V3, Chainlink and Maker DAO. 
+        </p>  
+        <h6 class="lead">
+          <small>
+          [-1 representing there is no data for a certain token pair]
+          </small>
+        </h6> 
+        {% if config.auto_update_datastorage %}
+        <form method='post' action='stop_auto_update_datastorage' class="lead">
+          <input type='submit' class="btn btn-lg btn-secondary"; value='DataStorage Auto Updating'>
+          <!-- <a href="/datastorage/auto_update" class="btn btn-lg btn-secondary">Auto Update All</a> -->
+        </form>
+        {% else %}
+        <form method='post' action='auto_update_datastorage' class="lead">
+            <input type='submit' class="btn btn-lg btn-secondary"; value='Auto Update DataStorage'>
+            <!-- <a href="/datastorage/auto_update" class="btn btn-lg btn-secondary">Auto Update All</a> -->
+        </form>
+        {% endif %}
+        
+        
+        <br />
+
+        <table class="table table-dark">
+          <thead>
+            <tr>
+              <th>Oracle Name</th>
+              <th>Token 0</th>
+              <th>Token 1</th>
+              <th>Data Amount</th>
+              <th>Block Start</th>
+              <th>Block End</th>
+              <th>Update Manually</th>
+            </tr>
+          </thead>
+          
+              {% for summary in data_storage_summaries %}
+              {% if summary.data_amount > 0 %}
+                  <tr>
+                      <td>{{summary.token_pair.oracle.name}}</td>
+                      <td>{{summary.token_pair.token0}}</td>
+                      <td>{{summary.token_pair.token1}}</td>
+                      <td>{{summary.data_amount}}</td>
+                      <td>{{summary.min_block_number}}</td>
+                      <td>{{summary.max_block_number}}</td>
+                      <td><a href="datastorage/update_data?oracle={{summary.token_pair.oracle.name}}&token0={{summary.token_pair.token0}}&token1={{summary.token_pair.token1}}&from={{summary.min_block_number}}&to={{summary.max_block_number}}">Update</a></td>
+                  </tr>
+              {% endif %}
+              {% endfor %}
+      
+      </table>
+
+
+      <!-- ############################ Data Visualization ############################ -->
+    
+
+      </main>
+
+      <br /><br /><br /><br /><br />
+
+      <main role="main" class="inner cover">
+
+        <h1 class="cover-heading">2 - Price Data Visualization.</h1>
+        <p class="lead">
+          The Summary of the aggregated price (measured in block) in our database
+        </p>  
+        {% if config.auto_update_granularity %}
+        <form method='post' action='stop_auto_update_granularity' class="lead">
+          <input type='submit' class="btn btn-lg btn-secondary"; value='Granularity Auto Updating'>
+          
+        </form>
+        {% else %}
+        <form method='post' action='auto_update_granularity' class="lead">
+            <input type='submit' class="btn btn-lg btn-secondary"; value='Auto Update Granularity'>
+        </form>
+        {% endif %}
+        
+        
+        <br /><br />
+
+        
+        <form action="main" method="post">
+          <!-- Block Start with: <input type="number" value={{min_block}} name="StartBlock" />
+          Block End with: <input type="number" value={{max_block}} name="EndBlock" /> -->
+          
+          Block Range Selection
+          <div class="input-group mb-3">
+            <input type="number" class="form-control" placeholder="StartBlock" aria-label="StartBlock"  value={{granularity_content.min_block}} name="PriceStartBlock">
+            <span class="input-group-text"> --> </span>
+            <input type="number" class="form-control" placeholder="EndBlock" aria-label="EndBlock"  value={{granularity_content.max_block}} name="PriceEndBlock">
+          </div>
+
+
+          <!-- <select multiple="multiple"  name="Oracles" id="Oracles" size="4">
+              {% for service in services %}
+                  <option value="{{service.id}}">{{service}}</option>
+              {% endfor %}
+              <option value="chainlink_eth_usd">Chainlink ETH/USD</option>
+              <option value="maker_eth_usd">Maker ETH/USD</option>
+              <option value="uniswapv2_eth_usdc">UniswapV2 ETH/USDC</option>
+              <option value="uniswapv3_eth_usdc">UniswapV3 ETH/USDC</option>
+          </select> -->
+          <p>
+  
+          <table border="1" class="table table-dark">
+              <tr>
+                  <th>Oracle Name</th>
+                  <th>Token 0</th>
+                  <th>Token 1</th>
+                  <th>Block Start</th>
+                  <th>Block End</th>
+                  <!-- <th>Update Data</th> -->
+                  <th>Select</th>
+              </tr>
+              
+              {% for summary in granularity_content.summaries %}
+                  <tr>
+                      <td>{{summary.token_pair.oracle.name}}</td>
+                      <td>{{summary.token_pair.token0}}</td>
+                      <td>{{summary.token_pair.token1}}</td>
+                      <td>{{summary.min_block_number}}</td>
+                      <td>{{summary.max_block_number}}</td>
+                      <!-- <td><a href="update_data?oracle={{summary.token_pair.oracle.name}}&token0={{summary.token_pair.token0}}&token1={{summary.token_pair.token1}}&from={{summary.min_block_number}}&to={{summary.max_block_number}}">Update</a></td> -->
+                      
+                      {% if summary.used %}
+                      <td>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="PricePlotOracles" role="switch" id="flexSwitchCheckDefault" value="{{summary.token_pair.oracle.name}}_{{summary.token_pair.token0}}_{{summary.token_pair.token1}}" checked>
+                      </div>
+                      </td>
+
+                      {% else %}
+                      <td>
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" name="PricePlotOracles" role="switch" id="flexSwitchCheckDefault" value="{{summary.token_pair.oracle.name}}_{{summary.token_pair.token0}}_{{summary.token_pair.token1}}" >
+                        </div>
+                        </td>
+                      {% endif %}
+                  </tr>
+              {% endfor %}
+          
+          </table>
+          
+              <!-- <input type="checkbox" name="Oracles" value="chainlink_eth_usd">Chainlink ETH/USD</option>
+              <br>
+              <input type="checkbox" name="Oracles" value="maker_eth_usd">Maker ETH/USD</option>
+              <br>
+              <input type="checkbox" name="Oracles" value="uniswapv2_eth_usdc">UniswapV2 ETH/USDC</option>
+              <br>
+              <input type="checkbox" name="Oracles" value="uniswapv3_eth_usdc">UniswapV3 ETH/USDC</option>
+          </p> -->
+          </p>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-secondary mb-3" value="submit">Plot Price</button>
+          </div>
+      </form>
+      <br>
+
+      
+
+
+      
+      {% if granularity_content.have_data == True %}  
+      {% block content %}
+        <div id="price_line_chart" class="p-3 mb-2 bg-light text-dark"  style="text-align: center;width:70em; height:600px;"></div>
+        <script type="text/javascript" src="{{STATIC_URL}}/static/jquery/dist/jquery.min.js"></script>
+        <!-- <script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script> -->
+        <script type="text/javascript" src="{{STATIC_URL}}/static/echarts/dist/echarts.min.js"></script>
+        <script>
+    
+            var price_line_chart = echarts.init(document.getElementById('price_line_chart'), 'white', {renderer: 'canvas'});
+            $(
+                function () {
+                    fetchPriceData(price_line_chart);
+                    setInterval(fetchPriceData, 2000);
+                }
+            );
+    
+            function fetchPriceData() {
+                $.ajax({
+                    type: "GET",
+                    url: "/get_price_plot",
+                    dataType: 'json',
+                    success: function (result) {
+                      price_line_chart.setOption(result.data);
+                    }
+                });
+            }
+        </script>
+
+      {% endblock %}
+      {% endif %}
+      
+
+        
+      </main>
+
+
+
+
+      <footer class="mastfoot mt-auto">
+        <div class="inner">
+          <p>Reference: Cover template from <a href="https://getbootstrap.com/">Bootstrap</a>, by <a href="https://twitter.com/mdo">@mdo</a>.</p>
+        </div>
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
+  </body>
+
+  
+
+</html> 

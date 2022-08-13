@@ -398,12 +398,15 @@ def update_data_from_csv_inner(oracle, token0, token1, res):
     
 
 def update_data(request):
-    
+    BACK_TO_MAIN = f"""
+    <a href="../main">Back To Main Web</a><br \><br \>
+    """ 
     DATA_UPDATE_FORM = f"""
     <form method='post' action='update_data'>
         Oracle: <input type='text' name='oracle' value={request.GET.get("oracle", "")}>
         token0: <input type='text' name='token0' value={request.GET.get("token0", "")}>
         token1: <input type='text' name='token1' value={request.GET.get("token1", "")}>
+        <br \><br \>
         BlockFrom: <input type='number' name='block_from' value={request.GET.get("from", "")}>
         BlockTo: <input type='number' name='block_to' value={request.GET.get("to", "")}>
         <label for="replace">Replace Database Data</label>
@@ -411,6 +414,7 @@ def update_data(request):
             <option value="True">True</option>
             <option value="False">False</option>
         </select>
+        <br \><br \>
         <input type='submit'; value='update_data'>
     </form>
     """
@@ -429,8 +433,11 @@ def update_data(request):
                     )
                     token_pair_info = f"""
                     {oracle}, {token0}/{token1} 
+                    <br \><br \>
                     Min Block Number: {summary.min_block_number}
                     Max Block Number: {summary.max_block_number}
+                    <br \>
+                    <br \>
                     """ 
                 except Summary.DoesNotExist:
                     pass
@@ -438,7 +445,7 @@ def update_data(request):
                 pass
         except Oracle.DoesNotExist:
             pass
-        return HttpResponse(token_pair_info + DATA_UPDATE_FORM)
+        return HttpResponse(BACK_TO_MAIN + token_pair_info + DATA_UPDATE_FORM)
     # if request.method == 'GET':
     #     oracle = request.GET('oracle')
     #     price_type = request.GET('price_type')
@@ -609,27 +616,30 @@ def update_data(request):
                 Oracle: <input type='text' name='oracle' value={request.POST.get("oracle", "")}>
                 token0: <input type='text' name='token0' value={request.POST.get("token0", "")}>
                 token1: <input type='text' name='token1' value={request.POST.get("token1", "")}>
+                <br \><br \>
                 BlockFrom: <input type='number' name='block_from' value={request.POST.get("from", "")}>
                 BlockTo: <input type='number' name='block_to' value={request.POST.get("to", "")}>
                 <label for="replace">Replace Database Data</label>
+               
                 <select id="replace" name="replace">
                     <option value="True">True</option>
                     <option value="False">False</option>
                 </select>
+                 <br \><br \>
                 <input type='submit'; value='update_data'>
             </form>
             """
             
-            return HttpResponse(f"""
+            return HttpResponse(BACK_TO_MAIN + f"""
             Data Crawl Completed with time {end - start} second;
-
+            <br \><br \>
             {oracle_name}, {token_pair_name}
-
+            <br \><br \>
             Min Block Number: {min_b}
             Max Block Number: {max_b}
-
+            <br \><br \>
             """ + DATA_UPDATE_FORM)
-    return HttpResponse(DATA_UPDATE_FORM)
+    return HttpResponse(BACK_TO_MAIN + DATA_UPDATE_FORM)
 
 def get_latest_block_number():
     __library = cdll.LoadLibrary('../eth_crawler/library.so')
@@ -660,8 +670,13 @@ def auto_update(request):
     # print("--- Updating Summary ---")
     # all_oracle(request) # update all summary
     # print("---  Start Crawling  ---")
-    while True:
+    t = threading.currentThread()
+    while getattr(t, "do_run", True):
+        # print(t, getattr(t, "do_run", True))
+        t = threading.currentThread()
         for summary in Summary.objects.all():
+            if getattr(t, "do_run", True) is False:
+                break
             # latest_block = 14956506 #get_latest_block_number()
             # latest_block = 15000000 #get_latest_block_number()
             latest_block = get_latest_block_number()

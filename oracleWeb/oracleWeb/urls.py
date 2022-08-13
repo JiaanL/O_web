@@ -21,7 +21,15 @@ from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('test_page', views.test_page),
+    path('main', views.main),
+    path('auto_update_datastorage', views.auto_update_datastorage),
+    path('stop_auto_update_datastorage', views.stop_auto_update_datastorage),
+    path('auto_update_granularity', views.auto_update_granularity),
+    path('stop_auto_update_granularity', views.stop_auto_update_granularity),
+
+    path("get_price_plot", views.get_price_plot.as_view()),
+
+
 
     path("price_data/", include("priceData.urls")),
     path("datastorage/", include("datastorage.urls")),

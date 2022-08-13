@@ -130,7 +130,8 @@ def block_granularity_update(request):
 
 def block_granularity_auto_update(request):
     time_wait = int(request.GET.get("time_wait", "10"))
-    while True:
+    t = threading.currentThread()
+    while getattr(t, "do_run", True):
         time.sleep(time_wait)
         block_granularity_update(request)
         print("--- block granularity auto updated ---")
@@ -497,75 +498,85 @@ def latency_auto_update_view(request):
 StartBlock = -1
 EndBolck = -1
 Oracles = []
+PricePlot = None
 
-def price_line_chart(request):
-    have_data = False
-    summaries =BlockPriceUpdateRecord.objects.all()
-    for summary in summaries:
-        summary.used = False
-    line="{}"
-    min_block = max([i.min_block_number for i in summaries])
-    max_block = min([i.max_block_number for i in summaries])
 
-    if request.method == "POST":
+# def price_line_chart(request):
+#     have_data = False
+#     summaries =BlockPriceUpdateRecord.objects.all()
+#     for summary in summaries:
+#         summary.used = False
+#     line="{}"
+#     min_block = max([i.min_block_number for i in summaries])
+#     max_block = min([i.max_block_number for i in summaries])
+
+#     if request.method == "POST":
         
-        global StartBlock, EndBolck, Oracles
+#         global StartBlock, EndBolck, Oracles
         
-        StartBlock = int(request.POST.get("StartBlock"))
-        EndBolck = int(request.POST.get("EndBlock"))
+#         StartBlock = int(request.POST.get("StartBlock"))
+#         EndBolck = int(request.POST.get("EndBlock"))
 
-        min_block, max_block = StartBlock, EndBolck
+#         min_block, max_block = StartBlock, EndBolck
 
-        Oracles = request.POST.getlist("Oracles")
-        have_data = True
-        print(StartBlock,EndBolck,Oracles)
-        line = Line()
-        line.add_xaxis([i for i in range(StartBlock,EndBolck+1)])
-        block_df = pd.DataFrame([i for i in range(StartBlock, EndBolck+1)], columns=['block_number'])
-        for oracle in Oracles:
-            oracle_name, token0, token1 = oracle.split("_")
-            token_pair = TokenPair.objects.get(oracle__name=oracle_name, token0=token0, token1=token1)
-            b_price = BlockPrice.objects.filter(token_pair=token_pair, block_number__number__gte=StartBlock, block_number__number__lte=EndBolck).all()
-            b_price_dict = {i.block_number.number:i.current for i in b_price}
-            b_price_df = pd.DataFrame(b_price_dict.items(), columns=['block_number', 'current'])
-            b_price_df = b_price_df.merge(block_df, left_on='block_number', right_on='block_number', how='right')
-            b_price_df = b_price_df.fillna(method="ffill")
-            line.add_yaxis(oracle_name, b_price_df['current'].to_list())
-            for summary in summaries:
-                if summary.token_pair == token_pair:
-                    summary.used = True
-
-
-        line = line.set_global_opts(title_opts=opts.TitleOpts(title="Price Line Plot"))
-
-        line = line.dump_options_with_quotes()
-
-        line = json.loads(line)
+#         Oracles = request.POST.getlist("Oracles")
+#         have_data = True
+#         print(StartBlock,EndBolck,Oracles)
+#         line = Line()
+#         line.add_xaxis([i for i in range(StartBlock,EndBolck+1)])
+#         block_df = pd.DataFrame([i for i in range(StartBlock, EndBolck+1)], columns=['block_number'])
+#         for oracle in Oracles:
+#             oracle_name, token0, token1 = oracle.split("_")
+#             token_pair = TokenPair.objects.get(oracle__name=oracle_name, token0=token0, token1=token1)
+#             b_price = BlockPrice.objects.filter(token_pair=token_pair, block_number__number__gte=StartBlock, block_number__number__lte=EndBolck).all()
+#             b_price_dict = {i.block_number.number:i.current for i in b_price}
+#             b_price_df = pd.DataFrame(b_price_dict.items(), columns=['block_number', 'current'])
+#             b_price_df = b_price_df.merge(block_df, left_on='block_number', right_on='block_number', how='right')
+#             b_price_df = b_price_df.fillna(method="ffill")
+#             line.add_yaxis(oracle_name, b_price_df['current'].to_list())
+#             for summary in summaries:
+#                 if summary.token_pair == token_pair:
+#                     summary.used = True
 
 
-        # line = JsonResponse(json.loads(line))
+#         line = line.set_global_opts(title_opts=opts.TitleOpts(title="Price Line Plot"))
+
+#         line = line.dump_options_with_quotes()
+
+#         line = json.loads(line)
+
+
+#         # line = JsonResponse(json.loads(line))
     
-    # from pyecharts.faker import Faker
+#     # from pyecharts.faker import Faker
     
 
-    print(line)
+#     print(line)
 
-    # return HttpResponse(c.render_embed())
-    content = dict(
-        have_data=have_data,
-        summaries=summaries,
-        line=line,
-        min_block=min_block,
-        max_block=max_block,
-    )
-    # print(min_block)
-    return render(request,"price_line_chart.html", content)
+#     # return HttpResponse(c.render_embed())
+#     content = dict(
+#         have_data=have_data,
+#         summaries=summaries,
+#         line=line,
+#         min_block=min_block,
+#         max_block=max_block,
+#     )
+#     # print(min_block)
+#     return render(request,"price_line_chart.html", content)
 
 
 
-def get_price_line_chart():
-    global StartBlock, EndBolck, Oracles
+def get_price_line_chart(price_plot_config=None):
+    global StartBlock, EndBolck, Oracles, PricePlot
+
+    if price_plot_config is not None:
+        StartBlock = price_plot_config['start_block']
+        EndBolck = price_plot_config['end_block']
+        Oracles = price_plot_config['oracles']
+
     line = Line()
+
+    # print(StartBlock,EndBolck,Oracles)
    
     
     x_axis_data = [i for i in range(StartBlock,EndBolck+1)]
@@ -612,13 +623,21 @@ def get_price_line_chart():
 
     line = line.dump_options_with_quotes()
 
+    PricePlot = line
+
 
     return line
+
+def return_price_plot():
+    global PricePlot
+    return PricePlot
 
 class gen_price_line_chart(APIView):
     def get(self, request, *args, **kwargs):
         # print("-----------------------------********************")
+        # print(json.loads(get_price_line_chart()))
         return JsonResponse(json.loads(get_price_line_chart()))
+
 
 def price_line_chart_view(request):
     have_data = False

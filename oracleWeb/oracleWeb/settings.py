@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'datastorage',
     'datavisualization',
     'debtmonitor',
+    'oracleWeb',
 ]
 
 MIDDLEWARE = [
