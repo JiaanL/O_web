@@ -11,7 +11,8 @@
     <title>Oracle Web</title>
 
     <!-- <link rel="canonical" href="https://getbootstrap.com/docs/4.0/examples/cover/"> -->
-
+    <script type="text/javascript" src="{{STATIC_URL}}/static/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}/static/echarts/dist/echarts.min.js"></script>
 
     <link href="{{STATIC_URL}}/static/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
     {% load static %}
@@ -123,9 +124,9 @@
           
           Block Range Selection
           <div class="input-group mb-3">
-            <input type="number" class="form-control" placeholder="StartBlock" aria-label="StartBlock"  value={{granularity_content.min_block}} name="PriceStartBlock">
+            <input type="number" class="form-control text-center" placeholder="StartBlock" aria-label="StartBlock"  value={{price_plot_config.start_block}} name="PriceStartBlock">
             <span class="input-group-text"> --> </span>
-            <input type="number" class="form-control" placeholder="EndBlock" aria-label="EndBlock"  value={{granularity_content.max_block}} name="PriceEndBlock">
+            <input type="number" class="form-control text-center" placeholder="EndBlock" aria-label="EndBlock"  value={{price_plot_config.end_block}} name="PriceEndBlock">
           </div>
 
 
@@ -151,7 +152,7 @@
                   <th>Select</th>
               </tr>
               
-              {% for summary in granularity_content.summaries %}
+              {% for summary in price_plot_config.summaries %}
                   <tr>
                       <td>{{summary.token_pair.oracle.name}}</td>
                       <td>{{summary.token_pair.token0}}</td>
@@ -162,15 +163,15 @@
                       
                       {% if summary.used %}
                       <td>
-                      <div class="form-check form-switch">
+                      <div class="form-check form-switch form-check-inline">
                         <input class="form-check-input" type="checkbox" name="PricePlotOracles" role="switch" id="flexSwitchCheckDefault" value="{{summary.token_pair.oracle.name}}_{{summary.token_pair.token0}}_{{summary.token_pair.token1}}" checked>
                       </div>
                       </td>
 
                       {% else %}
                       <td>
-                        <div class="form-check form-switch">
-                          <input class="form-check-input" type="checkbox" name="PricePlotOracles" role="switch" id="flexSwitchCheckDefault" value="{{summary.token_pair.oracle.name}}_{{summary.token_pair.token0}}_{{summary.token_pair.token1}}" >
+                        <div class="form-check form-switch form-check-inline">
+                          <input class="form-check-input text-center" type="checkbox" name="PricePlotOracles" role="switch" id="flexSwitchCheckDefault" value="{{summary.token_pair.oracle.name}}_{{summary.token_pair.token0}}_{{summary.token_pair.token1}}" >
                         </div>
                         </td>
                       {% endif %}
@@ -189,7 +190,7 @@
           </p> -->
           </p>
           <div class="col-auto">
-            <button type="submit" class="btn btn-secondary mb-3" value="submit">Plot Price</button>
+            <button type="submit" class="btn btn-secondary mb-3" value="price_plot_submit" name="price_plot">Plot Price</button>
           </div>
       </form>
       <br>
@@ -198,12 +199,12 @@
 
 
       
-      {% if granularity_content.have_data == True %}  
+      {% if price_plot_config.have_data == True %}  
       {% block content %}
         <div id="price_line_chart" class="p-3 mb-2 bg-light text-dark"  style="text-align: center;width:70em; height:600px;"></div>
-        <script type="text/javascript" src="{{STATIC_URL}}/static/jquery/dist/jquery.min.js"></script>
+        <!-- <script type="text/javascript" src="{{STATIC_URL}}/static/jquery/dist/jquery.min.js"></script> -->
         <!-- <script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script> -->
-        <script type="text/javascript" src="{{STATIC_URL}}/static/echarts/dist/echarts.min.js"></script>
+        <!-- <script type="text/javascript" src="{{STATIC_URL}}/static/echarts/dist/echarts.min.js"></script> -->
         <script>
     
             var price_line_chart = echarts.init(document.getElementById('price_line_chart'), 'white', {renderer: 'canvas'});
@@ -228,10 +229,165 @@
 
       {% endblock %}
       {% endif %}
-      
+      </main>
+
+      <br /><br /><br /><br />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <main role="main" class="inner cover">
+
+        <h1 class="cover-heading">3 - Latency Data Visualization.</h1>
+        <p class="lead">
+          The Summary of the Latency (measured in 6424 block) in our database
+        </p>  
+        {% if config.auto_update_latency %}
+        <form method='post' action='stop_auto_update_latency' class="lead">
+          <input type='submit' class="btn btn-lg btn-secondary"; value='Latency Auto Updating'>
+          
+        </form>
+        {% else %}
+        <form method='post' action='auto_update_latency' class="lead">
+            <input type='submit' class="btn btn-lg btn-secondary"; value='Auto Update Latency'>
+        </form>
+        {% endif %}
+        
+        
+        <br /><br />
 
         
+        <form action="main" method="post">
+          <!-- Block Start with: <input type="number" value={{min_block}} name="StartBlock" />
+          Block End with: <input type="number" value={{max_block}} name="EndBlock" /> -->
+          
+          Block Range Selection
+          <div class="input-group mb-3">
+            <input type="number" class="form-control text-center" placeholder="LatencyStartBlock" aria-label="StartBlock"  value={{latency_plot_config.start_block}} name="LatencyStartBlock">
+            <span class="input-group-text"> --> </span>
+            <input type="number" class="form-control text-center" placeholder="LatencyEndBlock" aria-label="EndBlock"  value={{latency_plot_config.end_block}} name="LatencyEndBlock">
+          </div>
+
+
+          <!-- <select multiple="multiple"  name="Oracles" id="Oracles" size="4">
+              {% for service in services %}
+                  <option value="{{service.id}}">{{service}}</option>
+              {% endfor %}
+              <option value="chainlink_eth_usd">Chainlink ETH/USD</option>
+              <option value="maker_eth_usd">Maker ETH/USD</option>
+              <option value="uniswapv2_eth_usdc">UniswapV2 ETH/USDC</option>
+              <option value="uniswapv3_eth_usdc">UniswapV3 ETH/USDC</option>
+          </select> -->
+          <p>
+
+            <table border="1" class="table table-dark">
+              <tr>
+                  <th>Source Oracle Name</th>
+                  <th>Source Token 0</th>
+                  <th>Source Token 1</th>
+                  <th>Target Oracle Name</th>
+                  <th>Target Token 0</th>
+                  <th>Target Token 1</th>
+                  <th>Block Start</th>
+                  <th>Block End</th>
+                  <th>Select to Plot</th>
+                  <!-- <th>Update Data</th> -->
+                  <!-- <th>Select as Source</th>
+                  <th>Select as Source</th> -->
+              </tr>
+              
+              {% for summary in latency_plot_config.summaries %}
+                  <tr>
+                      <td>{{summary.source_token_pair.oracle.name}}</td>
+                      <td>{{summary.source_token_pair.token0}}</td>
+                      <td>{{summary.source_token_pair.token1}}</td>
+                      <td>{{summary.target_token_pair.oracle.name}}</td>
+                      <td>{{summary.target_token_pair.token0}}</td>
+                      <td>{{summary.target_token_pair.token1}}</td>
+                      <td>{{summary.min_block_number}}</td>
+                      <td>{{summary.max_block_number}}</td>
+                      <!-- <td><a href="update_data?oracle={{summary.token_pair.oracle.name}}&token0={{summary.token_pair.token0}}&token1={{summary.token_pair.token1}}&from={{summary.min_block_number}}&to={{summary.max_block_number}}">Update</a></td> -->
+                      
+                      {% if summary.used %}
+                      <td>
+                      <div class="form-check form-switch form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="LatencyPlotOracles" role="switch" id="flexSwitchCheckDefault" value="{{summary.source_token_pair.oracle.name}}_{{summary.source_token_pair.token0}}_{{summary.source_token_pair.token1}};{{summary.target_token_pair.oracle.name}}_{{summary.target_token_pair.token0}}_{{summary.target_token_pair.token1}}" checked>
+                      </div>
+                      </td>
+
+                      {% else %}
+                      <td>
+                        <div class="form-check form-switch form-check-inline">
+                          <input class="form-check-input" type="checkbox" name="LatencyPlotOracles" role="switch" id="flexSwitchCheckDefault" value="{{summary.source_token_pair.oracle.name}}_{{summary.source_token_pair.token0}}_{{summary.source_token_pair.token1}};{{summary.target_token_pair.oracle.name}}_{{summary.target_token_pair.token0}}_{{summary.target_token_pair.token1}}" >
+                        </div>
+                        </td>
+                      {% endif %}
+                  </tr>
+              {% endfor %}
+          
+          </table>
+  
+          </p>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-secondary mb-3" value="latency_plot_submit" name="latency_plot">Plot Price</button>
+          </div>
+      </form>
+      <br>
+
+      
+
+
+      
+      {% if latency_plot_config.have_data == True %}  
+
+        <div id="latency_line_chart" class="p-3 mb-2 bg-light text-dark"  style="text-align: center;width:70em; height:600px;"></div>
+        <!-- <script type="text/javascript" src="{{STATIC_URL}}/static/jquery/dist/jquery.min.js"></script> -->
+        <!-- <script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script> -->
+        <!-- <script type="text/javascript" src="{{STATIC_URL}}/static/echarts/dist/echarts.min.js"></script> -->
+        <script>
+          var chart = echarts.init(document.getElementById('latency_line_chart'), 'white', {renderer: 'canvas'});
+          // console.log("123")
+          $(
+              function () {
+                  fetchData(chart);
+                  // setInterval(fetchData, 2000);
+              }
+          );
+
+          function fetchData() {
+              $.ajax({
+                  type: "GET",
+                  url: "get_latency_plot",
+                  dataType: 'json',
+                  success: function (result) {
+                      chart.setOption(result.data);
+                  }
+              });
+          }
+      </script>
+
+      {% endif %}
       </main>
+
+
+
+
+
+
+
+
 
 
 

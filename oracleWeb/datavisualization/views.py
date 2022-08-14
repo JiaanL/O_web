@@ -437,7 +437,8 @@ def latency_data_gen(request):
 
 def latency_auto_update(request):
     time_wait = int(request.GET.get("time_wait", "10"))
-    while True:
+    t = threading.currentThread()
+    while getattr(t, "do_run", True):
         time.sleep(time_wait)
         latency_data_gen(request)
         print("--- latency auto updated ---")
@@ -684,9 +685,17 @@ LatencyStartBlock = -1
 LatencyEndBolck = -1
 LatencyOracles = latency_targets
 LatencyFrequency = 6424
+LatencyChart = None
 
-def get_latency_chart():
-    global LatencyStartBlock, LatencyEndBolck, LatencyOracles
+def get_latency_chart(latency_config=None):
+    global LatencyStartBlock, LatencyEndBolck, LatencyOracles, LatencyChart
+
+
+    if latency_config is not None:
+        LatencyStartBlock= latency_config['start_block']
+        LatencyEndBolck = latency_config['end_block']
+        LatencyOracles = latency_config['oracles']
+
     line = Line()
    
     
@@ -750,8 +759,10 @@ def get_latency_chart():
 
     line = line.dump_options_with_quotes()
 
+    LatencyChart = line
 
     return line
+
 class gen_latency_chart(APIView):
     def get(self, request, *args, **kwargs):
         # print("-----------------------------********************")

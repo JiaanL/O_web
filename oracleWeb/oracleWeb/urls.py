@@ -26,8 +26,13 @@ urlpatterns = [
     path('stop_auto_update_datastorage', views.stop_auto_update_datastorage),
     path('auto_update_granularity', views.auto_update_granularity),
     path('stop_auto_update_granularity', views.stop_auto_update_granularity),
+    path('auto_update_latency', views.auto_update_latency),
+    path('stop_auto_update_latency', views.stop_auto_update_latency),
+
+
 
     path("get_price_plot", views.get_price_plot.as_view()),
+    path("get_latency_plot", views.get_latency_plot.as_view()),
 
 
 
