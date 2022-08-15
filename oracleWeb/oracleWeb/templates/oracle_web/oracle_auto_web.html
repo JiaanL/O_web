@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+
+  
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Oracle Web">
+    <meta name="author" content="Jiaan Lin">
+
+    <title>Oracle Web</title>
+
+    <!-- <link rel="canonical" href="https://getbootstrap.com/docs/4.0/examples/cover/"> -->
+    <script type="text/javascript" src="{{STATIC_URL}}/static/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}/static/echarts/dist/echarts.min.js"></script>
+
+    <link href="{{STATIC_URL}}/static/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'oracle_web/cover.css' %}">
+  </head>
+  <body class="text-center">
+    <!-- ############################ Data Storage ############################ -->
+    <div class="cover-container d-flex h-100 p-3 mx-auto flex-column">
+      <header class="masthead mb-auto">
+        <div class="inner">
+          <!-- <h3 class="masthead-brand">Oracle and Lending DeFi Monitor</h3> -->
+          <nav class="nav nav-masthead justify-content-center">
+            <a class="nav-link active" href="#">Home</a>
+            <a class="nav-link" href="#">Features</a>
+            <a class="nav-link" href="#">Contact</a>
+          </nav>
+        </div>
+      </header>
+
+
+      <main role="main" class="inner cover">
+
+        <h1 class="cover-heading">Price Data Visualization.</h1>
+        <p class="lead">
+          The Summary of the aggregated price (measured in block) in our database
+        </p>  
+
+        <form method='post' action='auto_main' class="lead">
+          
+          Block Range Selection
+
+          <div class="input-group mb-3">
+            <span class="input-group-text"> Target Address </span>
+            <input type="text" class="form-control text-center" placeholder="DebtMonitorTarget" aria-label="Target"  value={{hf_plot_config.target_address}} name="DebtMonitorTarget">
+          </div>
+
+          <div class="input-group mb-3">
+            <span class="input-group-text"> Previous Blocks Amount For Train </span>
+            <input type="number" class="form-control text-center" placeholder="DebtMonitorPreviousBlock" aria-label="PreviousBlock"  value={{hf_plot_config.previous_block_for_train}} name="DebtMonitorPreviousBlock">
+            <span class="input-group-text"> MC Amount </span>
+            <input type="number" class="form-control text-center" placeholder="DebtMonitorMCAmount" aria-label="MCAmount"  value={{hf_plot_config.mc_amount}} name="DebtMonitorMCAmount">
+            <span class="input-group-text"> Step Ahead </span>
+            <input type="number" class="form-control text-center" placeholder="DebtMonitorStepAhead" aria-label="StepAhead"  value={{hf_plot_config.step_ahead}} name="DebtMonitorStepAhead">
+          </div>
+          
+
+          <!-- <button type="submit" class="btn btn-secondary mb-3" value="start_auto_all" name="auto_all"> Auto Start </button> -->
+          
+          {% if config.auto_all == False %}  
+            <button type="submit" class="btn btn-secondary mb-3" value="start_auto_all" name="auto_all"> Auto Start </button>
+            <!-- <input type='submit' class="btn btn-lg btn-secondary"; value="start_auto_all" name="auto_all"> -->
+          {% else %}
+            <button type="submit" class="btn btn-secondary mb-3" value="stop_auto_all" name="auto_all"> Stop Auto </button>
+              <!-- <input type='submit' class="btn btn-lg btn-secondary"; value="stop_auto_all" name="auto_all"> -->
+          {% endif %}
+          <!-- <input type='submit' class="btn btn-lg btn-secondary"; value='Predict'> -->
+        </form>
+
+      {% if price_plot_config.have_data == True %}  
+      {% block content %}
+        <div id="price_line_chart" class="p-3 mb-2 bg-light text-dark"  style="text-align: center;width:70em; height:600px;"></div>
+        <!-- <script type="text/javascript" src="{{STATIC_URL}}/static/jquery/dist/jquery.min.js"></script> -->
+        <!-- <script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script> -->
+        <!-- <script type="text/javascript" src="{{STATIC_URL}}/static/echarts/dist/echarts.min.js"></script> -->
+        <script>
+    
+            var price_line_chart = echarts.init(document.getElementById('price_line_chart'), 'white', {renderer: 'canvas'});
+            $(
+                function () {
+                    fetchPriceData(price_line_chart);
+                    setInterval(fetchPriceData, 20000);
+                }
+            );
+    
+            function fetchPriceData() {
+                $.ajax({
+                    type: "GET",
+                    url: "/get_price_plot",
+                    dataType: 'json',
+                    success: function (result) {
+                      price_line_chart.setOption(result.data);
+                    }
+                });
+            }
+        </script>
+
+      {% endblock %}
+      {% endif %}
+      <br /><br /><br /><br />
+      </main>
+
+      
+
+
+
+
+
+      <main role="main" class="inner cover">
+
+        <h1 class="cover-heading">Latency Data Visualization.</h1>
+        <p class="lead">
+          The Summary of the Latency (measured in 6424 block) in our database
+        </p>  
+      {% if latency_plot_config.have_data == True %}  
+
+        <div id="latency_line_chart" class="p-3 mb-2 bg-light text-dark"  style="text-align: center;width:70em; height:600px;"></div>
+        <!-- <script type="text/javascript" src="{{STATIC_URL}}/static/jquery/dist/jquery.min.js"></script> -->
+        <!-- <script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script> -->
+        <!-- <script type="text/javascript" src="{{STATIC_URL}}/static/echarts/dist/echarts.min.js"></script> -->
+        <script>
+          var latency_line_chart = echarts.init(document.getElementById('latency_line_chart'), 'white', {renderer: 'canvas'});
+          // console.log("123")
+          $(
+              function () {
+                  fetchLatencyData(latency_line_chart);
+                  setInterval(fetchLatencyData, 20000);
+              }
+          );
+
+          function fetchLatencyData() {
+              $.ajax({
+                  type: "GET",
+                  url: "get_latency_plot",
+                  dataType: 'json',
+                  success: function (result) {
+                    latency_line_chart.setOption(result.data);
+                  }
+              });
+          }
+      </script>
+
+      {% endif %}
+      <br /><br /><br /><br />
+      </main>
+
+
+
+
+      <main role="main" class="inner cover">
+
+        <h1 class="cover-heading">Liquidation Call Prediction.</h1>
+        <p class="lead">
+          Predict the probability of being liquidated
+        </p>  
+      {% if hf_plot_config.potential == True %}
+      {{hf_plot_config.target_address}} is a valid address (with only WETH/DAI/USDC/USDT in its AAVE)
+      {% endif %}
+  
+      <br>
+      {% if hf_plot_config.have_data == True %}
+      <div id="debt_line_chart" class="p-3 mb-2 bg-light text-dark"  style="text-align: center;width:70em; height:600px;"></div>
+      <div id="debt_line_chart2" class="p-3 mb-2 bg-light text-dark"  style="text-align: center;width:70em; height:600px;"></div>
+      
+      <script>
+          var debt_chart = echarts.init(document.getElementById('debt_line_chart'), 'white', {renderer: 'canvas'});
+          var debt_chart2 = echarts.init(document.getElementById('debt_line_chart2'), 'white', {renderer: 'canvas'});
+          // console.log("123")
+          $(
+              function () {
+                  fetchDebtData(debt_chart);
+                  fetchDebtData2(debt_chart2);
+                  setInterval(fetchDebtData, 20000);
+                  setInterval(fetchDebtData2, 20000);
+              }
+          );
+  
+          function fetchDebtData() {
+              $.ajax({
+                  type: "GET",
+                  url: "get_hf_previous_plot",
+                  dataType: 'json',
+                  success: function (result) {
+                    debt_chart.setOption(result.data);
+                  }
+              });
+          }
+  
+          function fetchDebtData2() {
+              $.ajax({
+                  type: "GET",
+                  url: "get_hf_plot",
+                  dataType: 'json',
+                  success: function (result) {
+                    debt_chart2.setOption(result.data);
+                  }
+              });
+          }
+      </script>
+  
+      
+      {% endif %}
+        
+        <br /><br />
+      </main>
+
+
+
+
+
+
+
+
+
+      <footer class="mastfoot mt-auto">
+        <div class="inner">
+          <p>Reference: Cover template from <a href="https://getbootstrap.com/">Bootstrap</a>, by <a href="https://twitter.com/mdo">@mdo</a>.</p>
+        </div>
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
+  </body>
+
+  
+
+</html> 

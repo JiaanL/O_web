@@ -67,41 +67,41 @@
         </p> -->
         </p>
         <input type="submit" value="submit">
-    </form>
-    <br>
-    <div id="line_chart" style="width:1000px; height:600px;"></div>
-    {% if have_data == True %}
-    <script>
-        // var chart = echarts.init(document.getElementById('line_chart'), 'white', {renderer: 'canvas'});
-        // $(
-        //     function () {
-        //         chart.setOption({{line}});
-        //     }
-        // );
+            </form>
+            <br>
+            <div id="line_chart" style="width:1000px; height:600px;"></div>
+            {% if have_data == True %}
+            <script>
+                // var chart = echarts.init(document.getElementById('line_chart'), 'white', {renderer: 'canvas'});
+                // $(
+                //     function () {
+                //         chart.setOption({{line}});
+                //     }
+                // );
 
-        var chart = echarts.init(document.getElementById('line_chart'), 'white', {renderer: 'canvas'});
-        // console.log("123")
-        $(
-            function () {
-                fetchData(chart);
-                // setInterval(fetchData, 2000);
-            }
-        );
+                var chart = echarts.init(document.getElementById('line_chart'), 'white', {renderer: 'canvas'});
+                // console.log("123")
+                $(
+                    function () {
+                        fetchData(chart);
+                        // setInterval(fetchData, 2000);
+                    }
+                );
 
-        function fetchData() {
-            $.ajax({
-                type: "GET",
-                url: "/datavisualization/gen_latency_chart",
-                dataType: 'json',
-                success: function (result) {
-                    chart.setOption(result.data);
+                function fetchData() {
+                    $.ajax({
+                        type: "GET",
+                        url: "/datavisualization/gen_latency_chart",
+                        dataType: 'json',
+                        success: function (result) {
+                            chart.setOption(result.data);
+                        }
+                    });
                 }
-            });
-        }
-    </script>
+            </script>
 
     
-    {% endif %}
+            {% endif %}
 
 <!-- {{line}} -->
 </body>

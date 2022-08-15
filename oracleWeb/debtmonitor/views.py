@@ -1,4 +1,5 @@
 from multiprocessing.sharedctypes import Value
+from unittest.mock import NonCallableMagicMock
 from django.shortcuts import render
 import ctypes
 from ctypes import c_char_p, cdll
@@ -449,7 +450,8 @@ def auto_update(request):
     # print("--- Updating Summary ---")
     # all_oracle(request) # update all summary
     # print("---  Start Crawling  ---")
-    while True:
+    t = threading.currentThread()
+    while getattr(t, "do_run", True):
         
         summary = LendingPoolUpdateSummary.objects.get_or_create(action="overall")[0]
         latest_block = get_latest_block_number()
@@ -560,11 +562,15 @@ ReservesStatusEndIndex = 100000
 StepAhead = 100
 MCAmount = 1000
 HFChartDone = False
+EMPTYPLOT = Line()
+EMPTYPLOT = EMPTYPLOT.set_global_opts(title_opts=opts.TitleOpts(title="Plot Generating..."))
+EMPTYPLOT = EMPTYPLOT.dump_options_with_quotes()
 
-HF_chart = None
-HF_previous_chart = None
+
+HF_chart = EMPTYPLOT
+HF_previous_chart = EMPTYPLOT
 Previous_chart_done = False
-MC_chart = None
+MC_chart = EMPTYPLOT
 DebtData = None
 
 
@@ -630,9 +636,18 @@ def healthfactor_chart_view(request):
 
 
 
-def gen_hf_chart():
+def gen_hf_chart(hf_config=None):
     print('-------- START genarting hf chart --------')
     global HF_chart, HFChartDone, MC_chart, HF_previous_chart, Previous_chart_done
+    global TargetContract, ReservesStatusEnd, StepAhead, MCAmount, ReservesStatusEndIndex, PreviousBlockForTrain
+
+    if hf_config is not None:
+        TargetContract = hf_config['target_address']
+        ReservesStatusEnd = hf_config['reserve_status_end']
+        StepAhead = hf_config['step_ahead']
+        MCAmount = hf_config['mc_amount']
+        ReservesStatusEndIndex = hf_config['reserves_status_end_index']
+        PreviousBlockForTrain = hf_config['previous_block_for_train']
 
     reserves_status = get_reserves_status()
     latest_block_num = reserves_status['block_num'].max()
@@ -752,7 +767,10 @@ def gen_hf_chart():
             # a_token_amount_i = ray_div(liquidated_collateral_amount, liquidity_index)
             # collateral_dict[collateral_asset] -= a_token_amount_i
 
-            collateral_in_original_unit, var_debt_in_original_unit, sta_debt_in_original_unit = get_token_value(block_num, index)
+            collateral_in_original_unit, var_debt_in_original_unit, sta_debt_in_original_unit = get_token_value(
+                block_num, index,
+                collateral_dict, collatearl_able_dict, variable_debt_dict, stable_debt_dict,reserves_status
+            )
 
             if var_debt_in_original_unit[debt_asset] < debt_to_cover:
                 var_debt_to_liquidate = var_debt_in_original_unit[debt_asset]
@@ -1009,6 +1027,15 @@ def gen_hf_chart():
         current_healthfactor=current_healthfactor,
     )
 
+
+def return_hf_plot():
+    global HF_chart
+    return HF_chart
+
+def return_hf_previous_plot():
+    global HF_previous_chart
+    # print(HF_previous_chart)
+    return HF_previous_chart
 
 class get_hf_chart(APIView):
     def get(self, request, *args, **kwargs):

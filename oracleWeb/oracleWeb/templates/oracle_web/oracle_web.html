@@ -32,9 +32,10 @@
         </div>
       </header>
 
-      <br /><br /><br /><br /><br />
+      
 
       <main role="main" class="inner cover">
+        <br /><br /><br /><br /><br />
         <h1 class="cover-heading">1 - Data Storage.</h1>
         <p class="lead">
           The Summary of the log data in our database, including
@@ -92,10 +93,10 @@
 
       <!-- ############################ Data Visualization ############################ -->
     
-
+      <br /><br /><br /><br /><br />
       </main>
 
-      <br /><br /><br /><br /><br />
+      
 
       <main role="main" class="inner cover">
 
@@ -229,9 +230,10 @@
 
       {% endblock %}
       {% endif %}
+      <br /><br /><br /><br />
       </main>
 
-      <br /><br /><br /><br />
+      
 
 
 
@@ -357,32 +359,172 @@
         <!-- <script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script> -->
         <!-- <script type="text/javascript" src="{{STATIC_URL}}/static/echarts/dist/echarts.min.js"></script> -->
         <script>
-          var chart = echarts.init(document.getElementById('latency_line_chart'), 'white', {renderer: 'canvas'});
+          var latency_line_chart = echarts.init(document.getElementById('latency_line_chart'), 'white', {renderer: 'canvas'});
           // console.log("123")
           $(
               function () {
-                  fetchData(chart);
-                  // setInterval(fetchData, 2000);
+                  fetchLatencyData(latency_line_chart);
+                  setInterval(fetchLatencyData, 2000);
               }
           );
 
-          function fetchData() {
+          function fetchLatencyData() {
               $.ajax({
                   type: "GET",
                   url: "get_latency_plot",
                   dataType: 'json',
                   success: function (result) {
-                      chart.setOption(result.data);
+                    latency_line_chart.setOption(result.data);
                   }
               });
           }
       </script>
 
       {% endif %}
+      <br /><br /><br /><br />
       </main>
 
 
 
+
+
+
+
+
+
+
+      <main role="main" class="inner cover">
+
+        <h1 class="cover-heading">4 - AAVE Data Crawling.</h1>
+        <p class="lead">
+          The Summary of the Log data crawled from aave lending pool in our database
+        </p>  
+        {% if config.auto_update_lending_pool %}
+        <form method='post' action='stop_auto_update_lending_pool' class="lead">
+          <input type='submit' class="btn btn-lg btn-secondary"; value='Lending Pool Auto Updating'>
+          
+        </form>
+        {% else %}
+        <form method='post' action='auto_update_lending_pool' class="lead">
+            <input type='submit' class="btn btn-lg btn-secondary"; value='Auto Update Lending Pool'>
+        </form>
+        {% endif %}
+        <br /><br />
+
+        <table border="1" class="table table-dark">
+          <tr>
+              <th>Action</th>
+              <!-- <th>Data Amount</th> -->
+              <th>Block Start</th>
+              <th>Block End</th>
+              <th>Update Data</th>
+          </tr>
+          
+              {% for summary in lending_pool_summaries %}
+                  <tr>
+                      <td>{{summary.action}}</td>
+                      <!-- <td>{{summary.data_amount}}</td> -->
+                      <td>{{summary.min_block_number}}</td>
+                      <td>{{summary.max_block_number}}</td>
+                      <td><a href="debtmonitor/update_data?oracle={{summary.token_pair.oracle.name}}&token0={{summary.token_pair.token0}}&token1={{summary.token_pair.token1}}&from={{summary.min_block_number}}&to={{summary.max_block_number}}">Update</a></td>
+                  </tr>
+              {% endfor %}
+      
+      </table>
+        <br /><br /><br /><br />
+      </main>
+
+
+
+
+      <main role="main" class="inner cover">
+
+        <h1 class="cover-heading">5 - Liquidation Call Prediction.</h1>
+        <p class="lead">
+          Predict the probability of being liquidated
+        </p>  
+        <form method='post' action='main' class="lead">
+          
+          Block Range Selection
+          <div class="input-group mb-3">
+            <span class="input-group-text"> Previous Blocks Amount For Train </span>
+            <input type="number" class="form-control text-center" placeholder="DebtMonitorPreviousBlock" aria-label="PreviousBlock"  value={{hf_plot_config.previous_block_for_train}} name="DebtMonitorPreviousBlock">
+            <span class="input-group-text"> To Block </span>
+            <input type="number" class="form-control text-center" placeholder="DebtMonitorEndBlock" aria-label="EndBlock"  value={{hf_plot_config.reserve_status_end}} name="DebtMonitorEndBlock">
+            <span class="input-group-text"> To Index </span>
+            <input type="number" class="form-control text-center" placeholder="DebtMonitorEndIndex" aria-label="EndIndex"  value={{hf_plot_config.reserves_status_end_index}} name="DebtMonitorEndIndex">
+            
+            
+          </div>
+
+          <div class="input-group mb-3">
+            <span class="input-group-text"> Target Address </span>
+            <input type="text" class="form-control text-center" placeholder="DebtMonitorTarget" aria-label="Target"  value={{hf_plot_config.target_address}} name="DebtMonitorTarget">
+          </div>
+
+          
+          <div class="input-group mb-3">
+            <!-- <span class="input-group-text"> Target Address </span>
+            <input type="number" class="form-control text-center" placeholder="DebtMonitorTarget" aria-label="Target"  value={{hf_plot_config.target}} name="DebtMonitorTarget"> -->
+            <span class="input-group-text"> MC Amount </span>
+            <input type="number" class="form-control text-center" placeholder="DebtMonitorMCAmount" aria-label="MCAmount"  value={{hf_plot_config.mc_amount}} name="DebtMonitorMCAmount">
+            <span class="input-group-text"> Step Ahead </span>
+            <input type="number" class="form-control text-center" placeholder="DebtMonitorStepAhead" aria-label="StepAhead"  value={{hf_plot_config.step_ahead}} name="DebtMonitorStepAhead">
+          </div>
+          <button type="submit" class="btn btn-secondary mb-3" value="hf_plot_submit" name="hf_plot">Plot Prediction</button>
+          <!-- <input type='submit' class="btn btn-lg btn-secondary"; value='Predict'> -->
+        </form>
+
+  
+      {% if hf_plot_config.potential == True %}
+      {{hf_plot_config.target_address}} is a valid address (with only WETH/DAI/USDC/USDT in its AAVE)
+      {% endif %}
+      {% if hf_plot_config.have_data == True %}
+      <br>
+      <div id="debt_line_chart" class="p-3 mb-2 bg-light text-dark"  style="text-align: center;width:70em; height:600px;"></div>
+      <div id="debt_line_chart2" class="p-3 mb-2 bg-light text-dark"  style="text-align: center;width:70em; height:600px;"></div>
+      
+      <script>
+          var debt_chart = echarts.init(document.getElementById('debt_line_chart'), 'white', {renderer: 'canvas'});
+          var debt_chart2 = echarts.init(document.getElementById('debt_line_chart2'), 'white', {renderer: 'canvas'});
+          // console.log("123")
+          $(
+              function () {
+                  fetchDebtData(debt_chart);
+                  fetchDebtData2(debt_chart2);
+                  setInterval(fetchDebtData, 2000);
+                  setInterval(fetchDebtData2, 2000);
+              }
+          );
+  
+          function fetchDebtData() {
+              $.ajax({
+                  type: "GET",
+                  url: "get_hf_previous_plot",
+                  dataType: 'json',
+                  success: function (result) {
+                    debt_chart.setOption(result.data);
+                  }
+              });
+          }
+  
+          function fetchDebtData2() {
+              $.ajax({
+                  type: "GET",
+                  url: "get_hf_plot",
+                  dataType: 'json',
+                  success: function (result) {
+                    debt_chart2.setOption(result.data);
+                  }
+              });
+          }
+      </script>
+  
+      
+      {% endif %}
+        
+        <br /><br />
+      </main>
 
 
 

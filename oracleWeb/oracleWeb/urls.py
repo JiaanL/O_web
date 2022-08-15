@@ -22,17 +22,23 @@ from . import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('main', views.main),
+    path('auto_main', views.auto_main),
     path('auto_update_datastorage', views.auto_update_datastorage),
     path('stop_auto_update_datastorage', views.stop_auto_update_datastorage),
     path('auto_update_granularity', views.auto_update_granularity),
     path('stop_auto_update_granularity', views.stop_auto_update_granularity),
     path('auto_update_latency', views.auto_update_latency),
     path('stop_auto_update_latency', views.stop_auto_update_latency),
+    path('auto_update_lending_pool', views.auto_update_lending_pool),
+    path('stop_auto_update_lending_pool', views.stop_auto_update_lending_pool),
 
 
 
     path("get_price_plot", views.get_price_plot.as_view()),
     path("get_latency_plot", views.get_latency_plot.as_view()),
+
+    path("get_hf_previous_plot", views.get_hf_previous_plot.as_view()), 
+    path("get_hf_plot", views.get_hf_plot.as_view()),
 
 
 

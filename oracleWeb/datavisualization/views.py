@@ -176,7 +176,7 @@ def latency_data_auto_gen(request):
 
 def latency_data_gen(request):
     block_from = int(request.GET.get('block_from', "-1"))
-    if block_from < global_block_from:
+    if block_from < global_block_from and block_from > 0:
         block_from = global_block_from
 
     block_to = int(request.GET.get('block_to', "-1"))
@@ -194,7 +194,7 @@ def latency_data_gen(request):
     # token_pair_list = []
     # data_list = []
 
-    
+    # print(block_from, block_to, frequency)
     for target in needed_data:
         oracle_name, token0, token1 = target.split('_')
         token_pair = TokenPair.objects.get(oracle__name=oracle_name, token0=token0, token1=token1)
@@ -499,7 +499,12 @@ def latency_auto_update_view(request):
 StartBlock = -1
 EndBolck = -1
 Oracles = []
-PricePlot = None
+
+EMPTYPLOT = Line()
+EMPTYPLOT = EMPTYPLOT.set_global_opts(title_opts=opts.TitleOpts(title="Plot Generating..."))
+EMPTYPLOT = EMPTYPLOT.dump_options_with_quotes()
+
+PricePlot = EMPTYPLOT
 
 
 # def price_line_chart(request):
@@ -578,6 +583,7 @@ def get_price_line_chart(price_plot_config=None):
     line = Line()
 
     # print(StartBlock,EndBolck,Oracles)
+    # 15330171 15339171 ['chainlink_eth_usd', 'uniswapv3_eth_usdc', 'uniswapv3_eth_usdt', 'uniswapv3_eth_dai']
    
     
     x_axis_data = [i for i in range(StartBlock,EndBolck+1)]
@@ -587,6 +593,7 @@ def get_price_line_chart(price_plot_config=None):
     # line = line.add_xaxis(xaxis_data=[i for i in range(len(x_axis_data))])
     # print([i for i in range(len(x_axis_data))])
     for oracle in Oracles:
+        # print(oracle)
         oracle_name, token0, token1 = oracle.split("_")
         token_pair = TokenPair.objects.get(oracle__name=oracle_name, token0=token0, token1=token1)
         b_price = BlockPrice.objects.filter(token_pair=token_pair, block_number__number__gte=StartBlock, block_number__number__lte=EndBolck).all()
@@ -685,7 +692,11 @@ LatencyStartBlock = -1
 LatencyEndBolck = -1
 LatencyOracles = latency_targets
 LatencyFrequency = 6424
-LatencyChart = None
+
+EMPTYPLOT = Line()
+EMPTYPLOT = EMPTYPLOT.set_global_opts(title_opts=opts.TitleOpts(title="Plot Generating..."))
+EMPTYPLOT = EMPTYPLOT.dump_options_with_quotes()
+LatencyChart = EMPTYPLOT
 
 def get_latency_chart(latency_config=None):
     global LatencyStartBlock, LatencyEndBolck, LatencyOracles, LatencyChart
@@ -762,6 +773,10 @@ def get_latency_chart(latency_config=None):
     LatencyChart = line
 
     return line
+
+def return_latency_plot():
+    global LatencyChart
+    return LatencyChart
 
 class gen_latency_chart(APIView):
     def get(self, request, *args, **kwargs):
