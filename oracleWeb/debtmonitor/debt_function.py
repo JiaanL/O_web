@@ -144,7 +144,7 @@ def get_block_time(block_num):
 def cal_stable_debt_change(stable_debt_amount_p, stable_borrow_rate_p, block_num, block_num_p):
     block_time = get_block_time(block_num)
     block_time_p = get_block_time(block_num_p)
-    exp = block_time - block_time_p
+    exp = int(block_time) - int(block_time_p)
     
     ###### Reference #####: https://etherscan.io/address/0xc6845a5c768bf8d7681249f8927877efda425baf#code
     expMinusOne = exp - 1
@@ -193,8 +193,11 @@ def update_target_debt_data(action_i, block_num, amount_i, token_name_i,
         collateral_dict[token_name_i] += a_token_amount_i
     elif action_i == 'Withdraw':
         if (collateral_dict[token_name_i] - a_token_amount_i) < 0:
-            return False, np.abs(collateral_dict[token_name_i] - a_token_amount_i)
-        collateral_dict[token_name_i] -= a_token_amount_i
+            print("-------- Warning: Rounding Error Cause Balance become Negative --------")
+            # return False, np.abs(collateral_dict[token_name_i] - a_token_amount_i)
+            collateral_dict[token_name_i] = 0
+        else:
+            collateral_dict[token_name_i] -= a_token_amount_i
     elif action_i == "Borrow":
         if rate_mode_i == '1': # stable
             if stable_debt_dict[token_name_i][0] is None:
@@ -208,12 +211,18 @@ def update_target_debt_data(action_i, block_num, amount_i, token_name_i,
     elif action_i == "Repay":
         if rate_mode_i == '1':
             if (new_stable_balance - stable_debt_amount_i) < 0:
-                return False, np.abs(new_stable_balance - stable_debt_amount_i)
-            stable_debt_dict[token_name_i] = [new_stable_balance - stable_debt_amount_i, stable_borrow_rate, block_num]
+                print("-------- Warning: Rounding Error Cause Balance become Negative --------")
+                # return False, np.abs(new_stable_balance - stable_debt_amount_i)
+                stable_debt_dict[token_name_i] = [None, None, None]
+            else:
+                stable_debt_dict[token_name_i] = [new_stable_balance - stable_debt_amount_i, stable_borrow_rate, block_num]
         elif rate_mode_i == '2': # variable
             if (variable_debt_dict[token_name_i] - variable_debt_amount_i) < 0:
-                return False, np.abs(variable_debt_dict[token_name_i] - variable_debt_amount_i)
-            variable_debt_dict[token_name_i] -= variable_debt_amount_i
+                print("-------- Warning: Rounding Error Cause Balance become Negative --------")
+                # return False, np.abs(variable_debt_dict[token_name_i] - variable_debt_amount_i)
+                variable_debt_dict[token_name_i] = 0
+            else:
+                variable_debt_dict[token_name_i] -= variable_debt_amount_i
     elif action_i == 'RebalanceStableBorrowRate':
         stable_debt_dict[token_name_i] = [new_stable_balance, stable_borrow_rate, block_num]
     else:
@@ -276,6 +285,7 @@ def get_price_data(until_block_num, previous_block = 6424):
             ).all().values()
         )
     )
+    assert 'block_num' in ttt.columns, "ERROR: Data Insufficient, PLZ update data"
     return ttt.sort_values("block_num")
 
 def invert_transformation(df_train, df_forecast):

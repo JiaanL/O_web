@@ -32,6 +32,39 @@
         </div>
       </header>
 
+      <main role="main" class="inner cover">
+      <form method='post' action='auto_main' class="lead">
+          
+        Block Range Selection
+
+        <div class="input-group mb-3">
+          <span class="input-group-text"> Target Address </span>
+          <input type="text" class="form-control text-center" placeholder="DebtMonitorTarget" aria-label="Target"  value={{hf_plot_config.target_address}} name="DebtMonitorTarget">
+        </div>
+
+        <div class="input-group mb-3">
+          <span class="input-group-text"> Previous Blocks Amount For Train </span>
+          <input type="number" class="form-control text-center" placeholder="DebtMonitorPreviousBlock" aria-label="PreviousBlock"  value={{hf_plot_config.previous_block_for_train}} name="DebtMonitorPreviousBlock">
+          <span class="input-group-text"> MC Amount </span>
+          <input type="number" class="form-control text-center" placeholder="DebtMonitorMCAmount" aria-label="MCAmount"  value={{hf_plot_config.mc_amount}} name="DebtMonitorMCAmount">
+          <span class="input-group-text"> Step Ahead </span>
+          <input type="number" class="form-control text-center" placeholder="DebtMonitorStepAhead" aria-label="StepAhead"  value={{hf_plot_config.step_ahead}} name="DebtMonitorStepAhead">
+        </div>
+        
+
+        <!-- <button type="submit" class="btn btn-secondary mb-3" value="start_auto_all" name="auto_all"> Auto Start </button> -->
+        
+        {% if config.auto_all == False %}  
+          <button type="submit" class="btn btn-secondary mb-3" value="start_auto_all" name="auto_all"> Auto Start </button>
+          <!-- <input type='submit' class="btn btn-lg btn-secondary"; value="start_auto_all" name="auto_all"> -->
+        {% else %}
+          <button type="submit" class="btn btn-secondary mb-3" value="stop_auto_all" name="auto_all"> Stop Auto </button>
+            <!-- <input type='submit' class="btn btn-lg btn-secondary"; value="stop_auto_all" name="auto_all"> -->
+        {% endif %}
+        <!-- <input type='submit' class="btn btn-lg btn-secondary"; value='Predict'> -->
+      </form>
+    </main>
+
 
       <main role="main" class="inner cover">
 
@@ -40,36 +73,7 @@
           The Summary of the aggregated price (measured in block) in our database
         </p>  
 
-        <form method='post' action='auto_main' class="lead">
-          
-          Block Range Selection
-
-          <div class="input-group mb-3">
-            <span class="input-group-text"> Target Address </span>
-            <input type="text" class="form-control text-center" placeholder="DebtMonitorTarget" aria-label="Target"  value={{hf_plot_config.target_address}} name="DebtMonitorTarget">
-          </div>
-
-          <div class="input-group mb-3">
-            <span class="input-group-text"> Previous Blocks Amount For Train </span>
-            <input type="number" class="form-control text-center" placeholder="DebtMonitorPreviousBlock" aria-label="PreviousBlock"  value={{hf_plot_config.previous_block_for_train}} name="DebtMonitorPreviousBlock">
-            <span class="input-group-text"> MC Amount </span>
-            <input type="number" class="form-control text-center" placeholder="DebtMonitorMCAmount" aria-label="MCAmount"  value={{hf_plot_config.mc_amount}} name="DebtMonitorMCAmount">
-            <span class="input-group-text"> Step Ahead </span>
-            <input type="number" class="form-control text-center" placeholder="DebtMonitorStepAhead" aria-label="StepAhead"  value={{hf_plot_config.step_ahead}} name="DebtMonitorStepAhead">
-          </div>
-          
-
-          <!-- <button type="submit" class="btn btn-secondary mb-3" value="start_auto_all" name="auto_all"> Auto Start </button> -->
-          
-          {% if config.auto_all == False %}  
-            <button type="submit" class="btn btn-secondary mb-3" value="start_auto_all" name="auto_all"> Auto Start </button>
-            <!-- <input type='submit' class="btn btn-lg btn-secondary"; value="start_auto_all" name="auto_all"> -->
-          {% else %}
-            <button type="submit" class="btn btn-secondary mb-3" value="stop_auto_all" name="auto_all"> Stop Auto </button>
-              <!-- <input type='submit' class="btn btn-lg btn-secondary"; value="stop_auto_all" name="auto_all"> -->
-          {% endif %}
-          <!-- <input type='submit' class="btn btn-lg btn-secondary"; value='Predict'> -->
-        </form>
+        
 
       {% if price_plot_config.have_data == True %}  
       {% block content %}

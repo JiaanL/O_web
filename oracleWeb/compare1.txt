@@ -1,1 +1,348 @@
-{'animation': True, 'animationThreshold': 2000, 'animationDuration': 1000, 'animationEasing': 'cubicOut', 'animationDelay': 0, 'animationDurationUpdate': 300, 'animationEasingUpdate': 'cubicOut', 'animationDelayUpdate': 0, 'color': ['#c23531', '#2f4554', '#61a0a8', '#d48265', '#749f83', '#ca8622', '#bda29a', '#6e7074', '#546570', '#c4ccd3', '#f05b72', '#ef5b9c', '#f47920', '#905a3d', '#fab27b', '#2a5caa', '#444693', '#726930', '#b2d235', '#6d8346', '#ac6767', '#1d953f', '#6950a1', '#918597'], 'series': [], 'legend': [{'data': [], 'selected': {}, 'show': True, 'padding': 5, 'itemGap': 10, 'itemWidth': 25, 'itemHeight': 14}], 'tooltip': {'show': True, 'trigger': 'item', 'triggerOn': 'mousemove|click', 'axisPointer': {'type': 'line'}, 'showContent': True, 'alwaysShowContent': False, 'showDelay': 0, 'hideDelay': 100, 'textStyle': {'fontSize': 14}, 'borderWidth': 0, 'padding': 5}, 'xAxis': [{'type': 'value', 'name': 'block_number', 'show': True, 'scale': True, 'nameLocation': 'end', 'nameGap': 15, 'gridIndex': 0, 'inverse': False, 'offset': 0, 'splitNumber': 5, 'minInterval': 0, 'splitLine': {'show': False, 'lineStyle': {'show': True, 'width': 1, 'opacity': 1, 'curveness': 0, 'type': 'solid'}}, 'data': [15321000, 15321001, 15321002, 15321003, 15321004, 15321005, 15321006, 15321007, 15321008, 15321009, 15321010, 15321011, 15321012, 15321013, 15321014, 15321015, 15321016, 15321017, 15321018, 15321019, 15321020, 15321021, 15321022, 15321023, 15321024, 15321025, 15321026, 15321027, 15321028, 15321029, 15321030, 15321031, 15321032, 15321033, 15321034, 15321035, 15321036, 15321037, 15321038, 15321039, 15321040, 15321041, 15321042, 15321043, 15321044, 15321045, 15321046, 15321047, 15321048, 15321049, 15321050, 15321051, 15321052, 15321053, 15321054, 15321055, 15321056, 15321057, 15321058, 15321059, 15321060, 15321061, 15321062, 15321063, 15321064, 15321065, 15321066, 15321067, 15321068, 15321069, 15321070, 15321071, 15321072, 15321073, 15321074, 15321075, 15321076, 15321077, 15321078, 15321079, 15321080, 15321081, 15321082, 15321083, 15321084, 15321085, 15321086, 15321087, 15321088, 15321089, 15321090, 15321091, 15321092, 15321093, 15321094, 15321095, 15321096, 15321097, 15321098, 15321099, 15321100, 15321101, 15321102, 15321103, 15321104, 15321105, 15321106, 15321107, 15321108, 15321109, 15321110, 15321111, 15321112, 15321113, 15321114, 15321115, 15321116, 15321117, 15321118, 15321119, 15321120, 15321121, 15321122, 15321123, 15321124, 15321125, 15321126, 15321127, 15321128, 15321129, 15321130, 15321131, 15321132, 15321133, 15321134, 15321135, 15321136, 15321137, 15321138, 15321139, 15321140, 15321141, 15321142, 15321143, 15321144, 15321145, 15321146, 15321147, 15321148, 15321149, 15321150, 15321151, 15321152, 15321153, 15321154, 15321155, 15321156, 15321157, 15321158, 15321159, 15321160, 15321161, 15321162, 15321163, 15321164, 15321165, 15321166, 15321167, 15321168, 15321169, 15321170, 15321171, 15321172, 15321173, 15321174, 15321175, 15321176, 15321177, 15321178, 15321179, 15321180, 15321181, 15321182, 15321183, 15321184, 15321185, 15321186, 15321187, 15321188, 15321189, 15321190, 15321191, 15321192, 15321193, 15321194, 15321195, 15321196, 15321197, 15321198, 15321199, 15321200, 15321201, 15321202, 15321203, 15321204, 15321205, 15321206, 15321207, 15321208, 15321209, 15321210, 15321211, 15321212, 15321213, 15321214, 15321215, 15321216, 15321217, 15321218, 15321219, 15321220, 15321221, 15321222, 15321223, 15321224, 15321225, 15321226, 15321227, 15321228, 15321229, 15321230, 15321231, 15321232, 15321233, 15321234, 15321235, 15321236, 15321237, 15321238, 15321239, 15321240, 15321241, 15321242, 15321243, 15321244, 15321245, 15321246, 15321247, 15321248, 15321249, 15321250, 15321251, 15321252, 15321253, 15321254, 15321255, 15321256, 15321257, 15321258, 15321259, 15321260, 15321261, 15321262, 15321263, 15321264, 15321265, 15321266, 15321267, 15321268, 15321269, 15321270, 15321271, 15321272, 15321273, 15321274, 15321275, 15321276, 15321277, 15321278, 15321279, 15321280, 15321281, 15321282, 15321283, 15321284, 15321285, 15321286, 15321287, 15321288, 15321289, 15321290, 15321291, 15321292, 15321293, 15321294, 15321295, 15321296, 15321297, 15321298, 15321299, 15321300, 15321301, 15321302, 15321303, 15321304, 15321305, 15321306, 15321307, 15321308, 15321309, 15321310, 15321311, 15321312, 15321313, 15321314, 15321315, 15321316, 15321317, 15321318, 15321319, 15321320, 15321321, 15321322, 15321323, 15321324, 15321325, 15321326, 15321327, 15321328, 15321329, 15321330, 15321331, 15321332, 15321333, 15321334, 15321335, 15321336, 15321337, 15321338, 15321339, 15321340, 15321341, 15321342, 15321343, 15321344, 15321345, 15321346]}], 'yAxis': [{'type': 'value', 'name': 'price', 'show': True, 'scale': True, 'nameLocation': 'end', 'nameGap': 15, 'gridIndex': 0, 'inverse': False, 'offset': 0, 'splitNumber': 5, 'minInterval': 0, 'splitLine': {'show': True, 'lineStyle': {'show': True, 'width': 1, 'opacity': 1, 'curveness': 0, 'type': 'solid'}}}], 'title': [{'text': 'Price Line Plot', 'padding': 5, 'itemGap': 10}]}
+@book{RN1,
+    author = {Lange, Helen P and Saunders, Anthony and Cornett, Marcia Millon},
+    title = {Financial Institutions Management},
+    publisher = {McGraw-Hill Australia Pty Lt},
+    ISBN = {1743762208},
+    year = {2015},
+    type = {Book}
+ }
+ @misc{RN2,
+    author = {Troianovski, Anton},
+    title = {Optical Delusion? Fiber Booms Again, Despite Bust},
+    volume = {2022},
+    number = {9 May},
+    url = {https://www.wsj.com/articles/SB10001424052702303863404577285260615058538},
+    year = {2012},
+    type = {Web Page}
+ }
+ @misc{RN3,
+    author = {Breidenbach, Lorenz and Cachin, Christian and Chan, Benedict and Coventry, Alex and Ellis, Steve and Juels, Ari and Koushanfar, Farinaz and Miller, Andrew and Magauran, Brendan and Moroz, Daniel},
+    title = {Chainlink 2.0: Next steps in the evolution of decentralized oracle networks},
+    year = {2021},
+    type = {Generic}
+ }
+ @inproceedings{RN4,
+    author = {Wang, Bin and Liu, Han and Liu, Chao and Yang, Zhiqiang and Ren, Qian and Zheng, Huixuan and Lei, Hong},
+    title = {Blockeye: Hunting for defi attacks on blockchain},
+    booktitle = {2021 IEEE/ACM 43rd International Conference on Software Engineering: Companion Proceedings (ICSE-Companion)},
+    publisher = {IEEE},
+    pages = {17-20},
+    ISBN = {1665412194},
+    type = {Conference Proceedings}
+ }
+ @article{RN8,
+    author = {Caldarelli, Giulio and Ellul, Joshua},
+    title = {The Blockchain Oracle Problem in Decentralized Finance—A Multivocal Approach},
+    journal = {Applied Sciences},
+    volume = {11},
+    number = {16},
+    pages = {7572},
+    year = {2021},
+    type = {Journal Article}
+ }
+ @inproceedings{RN9,
+    author = {Liu, Bowen and Szalachowski, Pawel and Zhou, Jianying},
+    title = {A first look into defi oracles},
+    booktitle = {2021 IEEE International Conference on Decentralized Applications and Infrastructures (DAPPS)},
+    publisher = {IEEE},
+    pages = {39-48},
+    ISBN = {1665434856},
+    type = {Conference Proceedings}
+ }
+ @inproceedings{RN11,
+    author = {Wang, Shih-Hung and Wu, Chia-Chien and Liang, Yu-Chuan and Hsieh, Li-Hsun and Hsiao, Hsu-Chun},
+    title = {ProMutator: Detecting Vulnerable Price Oracles in DeFi by Mutated Transactions},
+    booktitle = {2021 IEEE European Symposium on Security and Privacy Workshops (EuroS\&PW)},
+    publisher = {IEEE},
+    pages = {380-385},
+    ISBN = {1665410124},
+    type = {Conference Proceedings}
+ }
+ @article{RN12,
+    author = {Mackinga, Torgin and Nadahalli, Tejaswi and Wattenhofer, Roger},
+    title = {TWAP Oracle Attacks: Easier Done than Said?},
+    journal = {Cryptology ePrint Archive},
+    year = {2022},
+    type = {Journal Article}
+ }
+ @phdthesis{RN13,
+    author = {Lys, Léonard and Potop-Butucaru, Maria},
+    title = {Distributed Blockchain Price Oracle},
+    university = {LIP6},
+    year = {2022},
+    type = {Thesis}
+ }
+ @inproceedings{RN14,
+    author = {Kaleem, Mudabbir and Shi, Weidong},
+    title = {Demystifying pythia: A survey of chainlink oracles usage on ethereum},
+    booktitle = {International Conference on Financial Cryptography and Data Security},
+    publisher = {Springer},
+    pages = {115-123},
+    type = {Conference Proceedings}
+ }
+ @article{RN15,
+    author = {Adams, Hayden and Zinsmeister, Noah and Robinson, Dan},
+    title = {Uniswap v2 Core. 2020},
+    journal = {URL: https://uniswap. org/whitepaper. pdf},
+    year = {2020},
+    type = {Journal Article}
+ }
+ @inproceedings{RN16,
+    author = {Yu, Liuwen and Zichichi, Mirko and Markovich, Réka and Najjar, Amro},
+    title = {Enhancing Trust in Trust Services: Towards an Intelligent Human-input-based Blockchain Oracle (IHiBO)},
+    booktitle = {Proceedings of the 55th Annual Hawaii International Conference on System Sciences},
+    type = {Conference Proceedings}
+ }
+ @article{RN17,
+    author = {Caldarelli, Giulio},
+    title = {Understanding the blockchain oracle problem: A call for action},
+    journal = {Information},
+    volume = {11},
+    number = {11},
+    pages = {509},
+    year = {2020},
+    type = {Journal Article}
+ }
+ @inproceedings{RN18,
+    author = {Adler, John and Berryhill, Ryan and Veneris, Andreas and Poulos, Zissis and Veira, Neil and Kastania, Anastasia},
+    title = {Astraea: A decentralized blockchain oracle},
+    booktitle = {2018 IEEE international conference on internet of things (IThings) and IEEE green computing and communications (GreenCom) and IEEE cyber, physical and social computing (CPSCom) and IEEE smart data (SmartData)},
+    publisher = {IEEE},
+    pages = {1145-1152},
+    ISBN = {1538679752},
+    type = {Conference Proceedings}
+ }
+ @inproceedings{RN19,
+    author = {Mühlberger, Roman and Bachhofner, Stefan and Castelló Ferrer, Eduardo and Ciccio, Claudio Di and Weber, Ingo and Wöhrer, Maximilian and Zdun, Uwe},
+    title = {Foundational oracle patterns: Connecting blockchain to the off-chain world},
+    booktitle = {International Conference on Business Process Management},
+    publisher = {Springer},
+    pages = {35-51},
+    type = {Conference Proceedings}
+ }
+ @article{RN20,
+    author = {Nakamoto, Satoshi},
+    title = {Bitcoin: A peer-to-peer electronic cash system},
+    journal = {Decentralized Business Review},
+    pages = {21260},
+    year = {2008},
+    type = {Journal Article}
+ }
+ @article{RN21,
+    author = {Wood, Gavin},
+    title = {Ethereum: A secure decentralised generalised transaction ledger},
+    journal = {Ethereum project yellow paper},
+    volume = {151},
+    number = {2014},
+    pages = {1-32},
+    year = {2014},
+    type = {Journal Article}
+ }
+ @article{RN22,
+    author = {Buterin, Vitalik},
+    title = {A next-generation smart contract and decentralized application platform},
+    journal = {white paper},
+    volume = {3},
+    number = {37},
+    pages = {2.1},
+    year = {2014},
+    type = {Journal Article}
+ }
+ @inproceedings{RN23,
+    author = {Vujičić, Dejan and Jagodić, Dijana and Ranđić, Siniša},
+    title = {Blockchain technology, bitcoin, and Ethereum: A brief overview},
+    booktitle = {2018 17th international symposium infoteh-jahorina (infoteh)},
+    publisher = {IEEE},
+    pages = {1-6},
+    ISBN = {1538649071},
+    type = {Conference Proceedings}
+ }
+ @inproceedings{RN24,
+    author = {Zheng, Zibin and Xie, Shaoan and Dai, Hongning and Chen, Xiangping and Wang, Huaimin},
+    title = {An overview of blockchain technology: Architecture, consensus, and future trends},
+    booktitle = {2017 IEEE international congress on big data (BigData congress)},
+    publisher = {Ieee},
+    pages = {557-564},
+    ISBN = {1538619962},
+    type = {Conference Proceedings}
+ }
+ @article{RN25,
+    author = {Yaga, Dylan and Mell, Peter and Roby, Nik and Scarfone, Karen},
+    title = {Blockchain technology overview},
+    journal = {arXiv preprint arXiv:1906.11078},
+    year = {2019},
+    type = {Journal Article}
+ }
+ @inproceedings{RN26,
+    author = {Chatterjee, Rishav and Chatterjee, Rajdeep},
+    title = {An overview of the emerging technology: Blockchain},
+    booktitle = {2017 3rd International Conference on Computational Intelligence and Networks (CINE)},
+    publisher = {IEEE},
+    pages = {126-127},
+    ISBN = {1538625296},
+    type = {Conference Proceedings}
+ }
+ @article{RN27,
+    author = {Qin, Kaihua and Zhou, Liyi and Afonin, Yaroslav and Lazzaretti, Ludovico and Gervais, Arthur},
+    title = {CeFi vs. DeFi--Comparing Centralized to Decentralized Finance},
+    journal = {arXiv preprint arXiv:2106.08157},
+    year = {2021},
+    type = {Journal Article}
+ }
+ @inproceedings{RN28,
+    author = {Ladleif, Jan and Weske, Mathias},
+    title = {Time in blockchain-based process execution},
+    booktitle = {2020 IEEE 24th International Enterprise Distributed Object Computing Conference (EDOC)},
+    publisher = {IEEE},
+    pages = {217-226},
+    ISBN = {1728164737},
+    type = {Conference Proceedings}
+ }
+ @inproceedings{RN29,
+    author = {Qin, Kaihua and Zhou, Liyi and Gamito, Pablo and Jovanovic, Philipp and Gervais, Arthur},
+    title = {An empirical study of defi liquidations: Incentives, risks, and instabilities},
+    booktitle = {Proceedings of the 21st ACM Internet Measurement Conference},
+    pages = {336-350},
+    type = {Conference Proceedings}
+ }
+ @misc{RN30,
+    author = {Pfaff, Bernhard and Stigler, Matthieu and Pfaff, Maintainer Bernhard},
+    title = {Package ‘vars’},
+    year = {2021},
+    type = {Generic}
+ }
+ @book{RN31,
+    author = {Hill, R Carter and Griffiths, William E and Lim, Guay C},
+    title = {Principles of econometrics},
+    publisher = {John Wiley \& Sons},
+    ISBN = {1118452275},
+    year = {2018},
+    type = {Book}
+ }
+ @misc{RN32,
+    author = {Härdle, Wolfgang Karl and Harvey, Campbell R and Reule, Raphael CG},
+    title = {Understanding cryptocurrencies},
+    publisher = {Oxford University Press},
+    volume = {18},
+    number = {2},
+    pages = {181-208},
+    ISBN = {1479-8409},
+    year = {2020},
+    type = {Generic}
+ }
+ @article{RN33,
+    author = {Makarov, Igor and Schoar, Antoinette},
+    title = {Trading and arbitrage in cryptocurrency markets},
+    journal = {Journal of Financial Economics},
+    volume = {135},
+    number = {2},
+    pages = {293-319},
+    ISSN = {0304-405X},
+    year = {2020},
+    type = {Journal Article}
+ }
+ @article{RN34,
+    author = {Kołodziejczyk, Hanna and Jarno, Klaudia},
+    title = {Stablecoin–the stable cryptocurrency},
+    year = {2020},
+    type = {Journal Article}
+ }
+ @inproceedings{RN35,
+    author = {Wüst, Karl and Gervais, Arthur},
+    title = {Do you need a blockchain?},
+    booktitle = {2018 Crypto Valley Conference on Blockchain Technology (CVCBT)},
+    publisher = {IEEE},
+    pages = {45-54},
+    ISBN = {1538672049},
+    type = {Conference Proceedings}
+ }
+ @inproceedings{RN36,
+    author = {Wüst, Karl and Gervais, Arthur},
+    title = {Do you need a blockchain?},
+    booktitle = {2018 Crypto Valley Conference on Blockchain Technology (CVCBT)},
+    publisher = {IEEE},
+    pages = {45-54},
+    ISBN = {1538672049},
+    type = {Conference Proceedings}
+ }
+ @inproceedings{RN37,
+    author = {Wang, Shuai and Yuan, Yong and Wang, Xiao and Li, Juanjuan and Qin, Rui and Wang, Fei-Yue},
+    title = {An overview of smart contract: architecture, applications, and future trends},
+    booktitle = {2018 IEEE Intelligent Vehicles Symposium (IV)},
+    publisher = {IEEE},
+    pages = {108-113},
+    ISBN = {1538644525},
+    type = {Conference Proceedings}
+ }
+ @misc{RN38,
+    author = {fjl, atoulme, gballet},
+    title = {Ethereum Wire Protocol (ETH)},
+    volume = {2022},
+    number = {6 july},
+    url = {https://github.com/ethereum/devp2p/blob/master/caps/eth.md},
+    year = {2022},
+    type = {Web Page}
+ }
+ @article{RN39,
+    author = {Weintraub, Ben and Torres, Christof Ferreira and Nita-Rotaru, Cristina and State, Radu},
+    title = {A Flash (bot) in the Pan: Measuring Maximal Extractable Value in Private Pools},
+    journal = {arXiv preprint arXiv:2206.04185},
+    year = {2022},
+    type = {Journal Article}
+ }
+ @inproceedings{RN40,
+    author = {Decker, Christian and Wattenhofer, Roger},
+    title = {Information propagation in the bitcoin network},
+    booktitle = {IEEE P2P 2013 Proceedings},
+    publisher = {IEEE},
+    pages = {1-10},
+    ISBN = {1479905216},
+    type = {Conference Proceedings}
+ }
+ @misc{RN41,
+    author = {Chainlink},
+    title = {Market and Data Feeds},
+    url = {https://chain.link/data-feeds},
+    year = {2022},
+    type = {Web Page}
+ }
+ @book{RN42,
+    author = {Lütkepohl, Helmut},
+    title = {New introduction to multiple time series analysis},
+    publisher = {Springer Science \& Business Media},
+    ISBN = {3540277528},
+    year = {2005},
+    type = {Book}
+ }
+ @article{RN43,
+    author = {Lechner, Michael},
+    title = {The estimation of causal effects by difference-in-difference methods},
+    journal = {Foundations and Trends® in Econometrics},
+    volume = {4},
+    number = {3},
+    pages = {165-224},
+    ISSN = {1551-3076},
+    year = {2011},
+    type = {Journal Article}
+ }
+ @misc{RN44,
+    author = {Ethereum},
+    title = {GAS AND FEES},
+    url = {https://ethereum.org/en/developers/docs/gas/},
+    year = {2022},
+    type = {Web Page}
+ }
+ @misc{RN45,
+    author = {MakerDAO},
+    title = {Security},
+    url = {https://makerdao.world/en/learn/Oracles/security/},
+    year = {2022},
+    type = {Web Page}
+ }
+ @misc{RN46,
+    author = {Chainlink},
+    title = {Decentralized Data Model},
+    url = {https://docs.chain.link/docs/architecture-decentralized-model/},
+    year = {2022},
+    type = {Web Page}
+ }

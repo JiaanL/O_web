@@ -32,6 +32,8 @@ urlpatterns = [
     path('auto_update_lending_pool', views.auto_update_lending_pool),
     path('stop_auto_update_lending_pool', views.stop_auto_update_lending_pool),
 
+    # path('collect_evl_data', views.collect_evl_data),
+
 
 
     path("get_price_plot", views.get_price_plot.as_view()),

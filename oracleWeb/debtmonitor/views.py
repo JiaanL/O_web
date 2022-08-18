@@ -820,7 +820,8 @@ def gen_hf_chart(hf_config=None):
     # collateral, var_debt, sta_debt
     token_value_dicts = {i:j for i,j in zip(['collateral', 'var_debt', 'sta_debt'], token_value_dicts)}
 
-    price_data = get_price_data(until_block_num, previous_block=PreviousBlockForTrain)
+    price_data = get_price_data(until_block_num, previous_block= 6424*1 + PreviousBlockForTrain)
+    # price_data = get_price_data(until_block_num, previous_block=PreviousBlockForTrain)
     price_data['token0'] = price_data['token0'].apply(lambda x: 'weth' if x == 'eth' else x)
     price_data['token1'] = price_data['token1'].apply(lambda x: 'weth' if x == 'eth' else x)
     price_data = price_data[['block_num', 'oracle_name', 'token0', 'token1', 'current']]
@@ -842,6 +843,7 @@ def gen_hf_chart(hf_config=None):
         sub_price_df = sub_price_df.merge(block_num_df, how='right', left_index=True, right_index=True)
         sub_price_df.fillna(method='ffill', inplace=True)
         sub_price_df.fillna(method='bfill', inplace=True)
+        sub_price_df = sub_price_df[sub_price_df.index > (until_block_num-PreviousBlockForTrain-1)]
         uniswapv3_price_dict[token] = sub_price_df[token]
     chainlink_price_dict ={}
     for token in ['usdt', 'dai', 'usdc']:
@@ -851,6 +853,7 @@ def gen_hf_chart(hf_config=None):
         sub_price_df = sub_price_df.merge(block_num_df, how='right', left_index=True, right_index=True)
         sub_price_df.fillna(method='ffill', inplace=True)
         sub_price_df.fillna(method='bfill', inplace=True)
+        sub_price_df = sub_price_df[sub_price_df.index > (until_block_num-PreviousBlockForTrain-1)]
         chainlink_price_dict[token] = sub_price_df[token]
 
     collatearl_in_eth = 0
