@@ -45,7 +45,8 @@ get_single_block_time.restype = c_char_p
 SECONDS_PER_YEAR = 365 * 24 * 60 * 60
 RAY = 1e27
 
-
+# ray_mul = lambda a,b: int((int(a) * int(b) + int(RAY/2)) / int(RAY))
+# ray_div = lambda a,b: int((int(a) * int(RAY) + int(int(b)/2)) / int(b))
 ray_mul = lambda a,b: (a * b + RAY/2) / RAY
 ray_div = lambda a,b: (a * RAY + b/2) / b
 combine_block_n_index = lambda x: int(str(x['block_num']) + str(x['index']).zfill(6))
@@ -210,12 +211,15 @@ def update_target_debt_data(action_i, block_num, amount_i, token_name_i,
             assert False, "rate_mode_i error"
     elif action_i == "Repay":
         if rate_mode_i == '1':
-            if (new_stable_balance - stable_debt_amount_i) < 0:
-                print("-------- Warning: Rounding Error Cause Balance become Negative --------")
-                # return False, np.abs(new_stable_balance - stable_debt_amount_i)
-                stable_debt_dict[token_name_i] = [None, None, None]
+            if stable_debt_amount_p != None:
+                if (new_stable_balance - stable_debt_amount_i) < 0:
+                    print("-------- Warning: Rounding Error Cause Balance become Negative --------")
+                    # return False, np.abs(new_stable_balance - stable_debt_amount_i)
+                    stable_debt_dict[token_name_i] = [0, stable_borrow_rate, block_num]
+                else:
+                    stable_debt_dict[token_name_i] = [new_stable_balance - stable_debt_amount_i, stable_borrow_rate, block_num]
             else:
-                stable_debt_dict[token_name_i] = [new_stable_balance - stable_debt_amount_i, stable_borrow_rate, block_num]
+                print("-------- Warning: Rounding Error Cause False Stable Debt repay in liquidation call; --------")
         elif rate_mode_i == '2': # variable
             if (variable_debt_dict[token_name_i] - variable_debt_amount_i) < 0:
                 print("-------- Warning: Rounding Error Cause Balance become Negative --------")
