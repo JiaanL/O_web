@@ -75,6 +75,7 @@ liquidation_threshold_dict = dict(
     weth = 0.85
 )
 revert_token_dict = {v: k for k, v in token_dict.items()}
+change_token_address_to_name = lambda x: revert_token_dict[x] if x in revert_token_dict else x
 
 def get_potential_target():
     data = pd.DataFrame(
@@ -162,6 +163,8 @@ def cal_stable_debt_change(stable_debt_amount_p, stable_borrow_rate_p, block_num
 
     return new_stable_balance, balance_increase
 
+assert_negative = True
+
 def update_target_debt_data(action_i, block_num, amount_i, token_name_i, 
         rate_mode_i, liquidity_index, variable_borrow_index, stable_borrow_rate,
         collateral_dict, collatearl_able_dict, variable_debt_dict, stable_debt_dict):
@@ -195,6 +198,7 @@ def update_target_debt_data(action_i, block_num, amount_i, token_name_i,
     elif action_i == 'Withdraw':
         if (collateral_dict[token_name_i] - a_token_amount_i) < 0:
             print("-------- Warning: Rounding Error Cause Balance become Negative --------")
+            assert not assert_negative, f"{action_i} Balance become Negative"
             # return False, np.abs(collateral_dict[token_name_i] - a_token_amount_i)
             collateral_dict[token_name_i] = 0
         else:
@@ -214,6 +218,7 @@ def update_target_debt_data(action_i, block_num, amount_i, token_name_i,
             if stable_debt_amount_p != None:
                 if (new_stable_balance - stable_debt_amount_i) < 0:
                     print("-------- Warning: Rounding Error Cause Balance become Negative --------")
+                    assert not assert_negative, f"{action_i} Balance become Negative"
                     # return False, np.abs(new_stable_balance - stable_debt_amount_i)
                     stable_debt_dict[token_name_i] = [0, stable_borrow_rate, block_num]
                 else:
@@ -223,6 +228,7 @@ def update_target_debt_data(action_i, block_num, amount_i, token_name_i,
         elif rate_mode_i == '2': # variable
             if (variable_debt_dict[token_name_i] - variable_debt_amount_i) < 0:
                 print("-------- Warning: Rounding Error Cause Balance become Negative --------")
+                assert not assert_negative, f"{action_i} Balance become Negative"
                 # return False, np.abs(variable_debt_dict[token_name_i] - variable_debt_amount_i)
                 variable_debt_dict[token_name_i] = 0
             else:
