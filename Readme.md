@@ -65,3 +65,5 @@ python manage.py makemigrations datastorage # prepare the update of database
 python manage.py migrate # execute the update of database
 python manage.py shell_plus --notebook # open a jupyter server
 ```
+
+### 5. Use a borwser to 
