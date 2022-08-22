@@ -83,4 +83,8 @@ Direcly copy the link to the browser and we will get:
 
 ## 2. Functions
 
-### 2.1 Data Manually Update
+### 2.1. Data Manually Update
+There are two way to udpate price data, the first one is automatically update all existed data to the latest block. The second one is manually select the range that user want to update:
+![Alt text](images/DataUpdateDetails.png?raw=true "Data Update")
+![Alt text](images/AutoUpdateData.png?raw=true "Data Auto Update")
+![Alt text](images/ManualUpdateData.png?raw=true "Data Manual Update")
