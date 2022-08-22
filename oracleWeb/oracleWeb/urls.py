@@ -21,6 +21,7 @@ from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', views.main),
     path('main', views.main),
     path('auto_main', views.auto_main),
     path('auto_update_datastorage', views.auto_update_datastorage),

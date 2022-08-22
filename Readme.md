@@ -74,4 +74,5 @@ Django version 4.0.6, using settings 'oracleWeb.settings'
 Starting development server at http://127.0.0.1:8000/
 Quit the server with CONTROL-C.
 ```
+Direcly copy the link to the browser and we will get:
 ![Alt text](images/Browser.png?raw=true "Browser")
