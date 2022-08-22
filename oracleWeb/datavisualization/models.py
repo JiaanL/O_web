@@ -16,11 +16,11 @@ class BlockPrice(models.Model):
     class Meta:
         unique_together = ('token_pair', 'block_number',)
 
-class BlockPriceUpdateRecord(models.Model):
-    token_pair = models.ForeignKey(TokenPair, on_delete=models.CASCADE, unique=True)
-    min_block_number = models.IntegerField('Min Block Number', default=2147483647) # mysql maxint
-    max_block_number = models.IntegerField('Max Block Number', default=-1)
-    # data_amount = models.IntegerField('Data Amount', default=-1)
+# class BlockPriceUpdateRecord(models.Model):
+#     token_pair = models.ForeignKey(TokenPair, on_delete=models.CASCADE, unique=True)
+#     min_block_number = models.IntegerField('Min Block Number', default=2147483647) # mysql maxint
+#     max_block_number = models.IntegerField('Max Block Number', default=-1)
+#     # data_amount = models.IntegerField('Data Amount', default=-1)
 
 
 

@@ -67,3 +67,11 @@ python manage.py shell_plus --notebook # open a jupyter server
 ```
 
 ### 5. Use a borwser to 
+After starting the "runserver", we will get the following message in the 
+terminal:
+```
+Django version 4.0.6, using settings 'oracleWeb.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+```
+![Alt text](images/Browser.png?raw=true "Browser")
