@@ -70,7 +70,7 @@ python manage.py shell_plus --notebook # open a jupyter server
 After starting the "runserver", we will get the following message in the 
 terminal:
 ```
-python manage.py runserver
+> python manage.py runserver
 
 
 Django version 4.0.6, using settings 'oracleWeb.settings'
