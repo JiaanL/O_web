@@ -56,12 +56,12 @@ DATABASES = {
 }
 ```
 
-### 4. 
+### 4. Start the Web application
 Django Command
 ```
-python3 manage.py runserver [port] # run server in local host
-python3 manage.py shell # open a terminal
-python3 manage.py makemigrations datastorage # prepare the update of database
-python3 manage.py migrate # execute the update of database
+python manage.py runserver [port] # run server in local host
+python manage.py shell # open a terminal
+python manage.py makemigrations datastorage # prepare the update of database
+python manage.py migrate # execute the update of database
 python manage.py shell_plus --notebook # open a jupyter server
 ```
