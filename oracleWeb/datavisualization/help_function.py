@@ -15,7 +15,7 @@ IC = 'aic'
 def get_var_result(df, maxlags=MAX_LAGS, ic=IC):
     for col in df.columns:
         if len(set(df[col])) <= 4:
-            print('add random to avoid constant columns')
+            # print('add random to avoid constant columns')
             df[col] = df[col].apply(lambda x: x + (np.random.rand()-0.5) * 0.0001 )
     model = VAR(df)
     fitted_model = model.fit(maxlags=maxlags, ic=ic)

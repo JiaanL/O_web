@@ -936,7 +936,7 @@ def gen_hf_chart(hf_config=None):
         label_opts=opts.LabelOpts(is_show=False),
     )
     line = line.set_global_opts(
-        title_opts=opts.TitleOpts(title="HF Previous Plot"),
+        title_opts=opts.TitleOpts(title="Historical HF Plot"),
         xaxis_opts=opts.AxisOpts(
             type_="value", 
             is_scale=True,
@@ -994,14 +994,14 @@ def gen_hf_chart(hf_config=None):
     line = Line()
     line.add_xaxis((horizontal_liquidation_pct.index+1).to_list())
     line.add_yaxis(
-        'probability to be liquidated', 
+        'probability to be liquidated (assuming hf < 1 equal to being liquidated)', 
         horizontal_liquidation_pct.to_list(), 
         symbol="circle",
         symbol_size=1,
         label_opts=opts.LabelOpts(is_show=False),
     )
     line = line.set_global_opts(
-        title_opts=opts.TitleOpts(title="HF Plot"),
+        title_opts=opts.TitleOpts(title="HF Risk Plot"),
         xaxis_opts=opts.AxisOpts(
             type_="value", 
             is_scale=True,
