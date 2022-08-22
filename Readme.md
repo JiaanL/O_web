@@ -70,6 +70,9 @@ python manage.py shell_plus --notebook # open a jupyter server
 After starting the "runserver", we will get the following message in the 
 terminal:
 ```
+python manage.py runserver
+
+
 Django version 4.0.6, using settings 'oracleWeb.settings'
 Starting development server at http://127.0.0.1:8000/
 Quit the server with CONTROL-C.
