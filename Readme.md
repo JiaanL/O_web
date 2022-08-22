@@ -8,8 +8,11 @@ This repository implements Oracle Data (including block Price feed and latency) 
 Python version 3.8.12 <br />
 Django (4, 0, 6, 'final', 0) <br />
 Pandas 1.4.3 <br />
+Numpy 1.22.3 <br />
 Statsmodels 0.13.2 <br />
 Pyecharts 1.9.1 <br />
+pandarallel 1.6.1 <br />
+ctypes 1.1.0 <br />
 
 Go version go1.18.2 darwin/amd64 <br />
 GoEthereum 1.10.17-stable <br />
