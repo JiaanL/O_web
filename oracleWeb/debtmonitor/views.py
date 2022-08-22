@@ -236,7 +236,7 @@ def update_data(request):
         block_to = int(request.POST['block_to'])
         assert block_to >= block_from, "ERROR: block_to must be greater than block_from"
 
-        archive_node = "http://localhost:19545"
+        # archive_node = "http://localhost:19545"
         # data_source = f"{oracle}_{token0}_{token1}"
         blcokFrom = block_from
         blockTo = block_to
@@ -423,7 +423,7 @@ def get_latest_block_number():
     get_latest_block_num = __library.get_latest_block_num
     get_latest_block_num.argtypes = [c_char_p]
     get_latest_block_num.restype = int
-    archive_node = "http://localhost:19545"
+    # archive_node = "http://localhost:19545"
     res = get_latest_block_num(
         # data_source.encode(), 
         archive_node.encode(), 
