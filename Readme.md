@@ -5,21 +5,21 @@ This repository implements Oracle Data (including block Price feed and latency) 
 ## Setup
 
 ### 1. Prepare Envionment
-Python version 3.8.12
-Django (4, 0, 6, 'final', 0)
-Pandas 1.4.3
-Statsmodels 0.13.2
-Pyecharts 1.9.1
+Python version 3.8.12 <br />
+Django (4, 0, 6, 'final', 0) <br />
+Pandas 1.4.3 <br />
+Statsmodels 0.13.2 <br />
+Pyecharts 1.9.1 <br />
 
-Go version go1.18.2 darwin/amd64
-GoEthereum 1.10.17-stable
+Go version go1.18.2 darwin/amd64 <br />
+GoEthereum 1.10.17-stable <br />
 
 MySQL  Ver 8.0.30 for macos12.4 on x86_64 (Homebrew)
 
-R version 4.0.2 (2020-06-22)
+R version 4.0.2 (2020-06-22) <br />
 
-Node.js v18.7.0
-Bootstrap 5.2.0
+Node.js v18.7.0 <br />
+Bootstrap 5.2.0 <br />
 
 ### 2. SSH to Archive Node
 Before using ssh to connect, please get in touch with lzhou1110@gmail.com and send your computer ssh public key to store in the archive node of the server
