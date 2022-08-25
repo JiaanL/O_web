@@ -77,16 +77,18 @@ Django version 4.0.6, using settings 'oracleWeb.settings'
 Starting development server at http://127.0.0.1:8000/
 Quit the server with CONTROL-C.
 ```
-Direcly copy the link to the browser and we will get:
+Directly copy the link to the browser, and we will get:
 ![Alt text](images/Browser.png?raw=true "Browser")
 
 
-## 2. Functions
+## 2. Functions of Manual Plot Section
 
-### 2.1. Data Manually Update
+### 2.1. Price Data Update
 There are two way to udpate price data, the first one is automatically update all existed data to the latest block. The second one is manually select the range that user want to update:
 ![Alt text](images/DataUpdateDetails.png?raw=true "Data Update")
 example of clicked auto update:
 ![Alt text](images/AutoUpdateData.png?raw=true "Data Auto Update")
 example of cliced manual update:
 ![Alt text](images/ManualUpdateData.png?raw=true "Data Manual Update")
+
+### 2.2. Block Price Data Update

@@ -3,6 +3,8 @@ from statsmodels.tsa.api import VAR, VECM
 import statsmodels.tsa.vector_ar.util as var_tool
 from statsmodels.tsa.stattools import adfuller
 import statsmodels.tsa.vector_ar.vecm as vecm 
+import statsmodels.api as sm
+from statsmodels.tsa.ar_model import AutoReg, ar_select_order
 import pandas as pd
 import numpy as np
 import copy
@@ -12,11 +14,20 @@ import numpy as np
 MAX_LAGS = 100
 IC = 'aic'
 
+def get_ar_result(df, maxlags=MAX_LAGS, ic=IC):
+    # for col in df.columns:
+    if len(set(df)) <= 4:
+        # print('add random to avoid constant columns')
+        df = df.apply(lambda x: x + (np.random.rand()-0.5) * 0.0001 * x )
+    sel = ar_select_order(df, maxlags, ic=ic)
+    fitted_model = sel.model.fit()
+    return fitted_model
+
 def get_var_result(df, maxlags=MAX_LAGS, ic=IC):
     for col in df.columns:
         if len(set(df[col])) <= 4:
             # print('add random to avoid constant columns')
-            df[col] = df[col].apply(lambda x: x + (np.random.rand()-0.5) * 0.0001 )
+            df[col] = df[col].apply(lambda x: x + (np.random.rand()-0.5) * 0.0000001 * x )
     model = VAR(df)
     fitted_model = model.fit(maxlags=maxlags, ic=ic)
     return fitted_model
