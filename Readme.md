@@ -24,7 +24,7 @@ R version 4.0.2 (2020-06-22) <br />
 Node.js v18.7.0 <br />
 Bootstrap 5.2.0 <br />
 
-(There are some packages above that have been downloaded and saved in this repository; however, it only aims to run the code faster and automatically save by using "go", "node", and "npm.")
+(Some packages above have been downloaded and saved in this repository; however, there isn't any change on them. It only aims to run the code faster and automatically save by using "go", "node", and "npm".)
 
 ### 1.2. SSH to Archive Node
 Before using ssh to connect, please get in touch with lzhou1110@gmail.com and send your computer ssh public key to store in the archive node of the server
