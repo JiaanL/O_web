@@ -2,7 +2,13 @@
 
 This repository implements Oracle Data (including block Price feed and latency) and AAVE collateral risk visualization Web based application.
 
-## 1.Setup
+
+### Table of Contents
+**[1. Setup](#setup)**<br>
+**[2. Functions of Manual Plot Section](#functions-of-manual-plot-section)**<br>
+
+
+## 1. Setup
 
 ### 1.1. Prepare Envionment
 Python version 3.8.12 <br />
