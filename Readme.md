@@ -105,4 +105,6 @@ After crawling and preprocessing the data, we could start to plot the price from
 Similar to 2.2. and 2.3., the latency also has two-step. We need to calculate the data first, then select the target pair of data with range to plot.
 ![Alt text](images/PlotLatency.png?raw=true "Latency Plot")
 
+### 2.5. AAVE Liquidation Call Prediction
 
+![Alt text](images/DebtMonitor.png?raw=true "Health Factor")
