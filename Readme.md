@@ -96,5 +96,5 @@ Before generating the price plot, we need to unify the granularity of the price 
 ![Alt text](images/GranularityUpdate.png?raw=true "Price Granularity Update")
 
 ### 2.3. Block Price Plot
-After crawling and preprocessing the data, we could start to plot the price from different Oracle. Below is the pannel for choosing which data to plot.
+After crawling and preprocessing the data, we could start to plot the price from different Oracle. Below is the panel for choosing which data to plot.
 ![Alt text](images/PlotPrice.png?raw=true "Price Plot")
