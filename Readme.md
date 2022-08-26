@@ -98,3 +98,9 @@ Before generating the price plot, we need to unify the granularity of the price 
 ### 2.3. Block Price Plot
 After crawling and preprocessing the data, we could start to plot the price from different Oracle. Below is the panel for choosing which data to plot.
 ![Alt text](images/PlotPrice.png?raw=true "Price Plot")
+
+### 2.4. Latency Data Calculation and Plot
+Similar to 2.2. and 2.3., the latency also has two-step. We need to calculate the data first, then select the target pair of data with range to plot.
+![Alt text](images/PlotLatency.png?raw=true "Latency Plot")
+
+
