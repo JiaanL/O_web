@@ -129,6 +129,22 @@ On this page, there is no need to click multiple bottoms to update the different
 
 
 ## 4. Setup without loading sql
+1. open the link
+```
+http://127.0.0.1:8000/datastorage/initialize
+```
+
+2. after seeing the "done", go to
+```
+http://127.0.0.1:8000/datastorage/update_data
+```
+Input the data that you want to include in the database.
+
+Currently, we only support eth against usd, usdt, usdc, dai for data in uniswapv2, uniswapv3 and chainlink.
+![Alt text](images/UpdateDataStorage.png?raw=true "Health Factor")
+All data need to be in lower case.
+
+3. Back to the main web to start auto update
 
 
 ## 5. Example of Plot
