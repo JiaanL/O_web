@@ -6,7 +6,8 @@ This repository implements Oracle Data (including block Price feed and latency) 
 ### Table of Contents
 **[1. Setup](#1-setup)**<br>
 **[2. Functions of Manual Plot Section](#2-functions-of-manual-plot-section)**<br>
-
+**[3. Functions of Auto Plot Section](#3-functions-of-auto-plot-section)**<br>
+**[4. Setup without loading sql](#4-setup-without-loading-sql)**<br>
 
 ## 1. Setup
 
@@ -114,3 +115,8 @@ Similar to 2.2. and 2.3., the latency also has two-step. We need to calculate th
 ### 2.5. AAVE Liquidation Call Prediction
 We also need to crawl the data for Health Factor Historical Plot and Liquidation Risk Analysis Visualization (probability of HF drop below 1). Below is the input example for plot generating.
 ![Alt text](images/DebtMonitor.png?raw=true "Health Factor")
+
+## 3. Functions of Auto Plot Section
+
+
+## 4. Setup without loading sql
