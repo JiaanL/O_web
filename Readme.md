@@ -92,3 +92,5 @@ example of cliced manual update:
 ![Alt text](images/ManualUpdateData.png?raw=true "Data Manual Update")
 
 ### 2.2. Block Price Data Update
+Before generating the price plot, we need to unify the granularity of the price data. For example, we need to aggregate all prices in a block to one. For this part, we do not need to select the data range manually; instead, the web application will automatically use all data in the database to generate the block price.
+![Alt text](images/GranularityUpdate.png?raw=true "Price Granularity Update")
