@@ -8,6 +8,7 @@ This repository implements Oracle Data (including block Price feed and latency) 
 **[2. Functions of Manual Plot Section](#2-functions-of-manual-plot-section)**<br>
 **[3. Functions of Auto Plot Section](#3-functions-of-auto-plot-section)**<br>
 **[4. Setup without loading sql](#4-setup-without-loading-sql)**<br>
+**[5. Example of Plot](#5-example-of-plot)**<br>
 
 ## 1. Setup
 
@@ -117,6 +118,16 @@ We also need to crawl the data for Health Factor Historical Plot and Liquidation
 ![Alt text](images/DebtMonitor.png?raw=true "Health Factor")
 
 ## 3. Functions of Auto Plot Section
+### 3.1. Switch to auto plot
+On the top-right corner of the webpage, there is a link to the page which can fully update the plot.
+![Alt text](images/SwitchToAuto.png?raw=true "Health Factor")
+### 3.2. Auto plot all
+On this page, there is no need to click multiple bottoms to update the different databases. Instead, with only one click after inputting the information of your address, it will automatically start all database updating and also update the plot. All the plot generation is a "while True loop", which will generate the next one after the previous one is made.
+![Alt text](images/AutoPlot.png?raw=true "Health Factor")
 
 
 ## 4. Setup without loading sql
+
+
+## 5. Example of Plot
+Please refer to the report in section 8
