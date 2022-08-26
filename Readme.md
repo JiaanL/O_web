@@ -106,5 +106,5 @@ Similar to 2.2. and 2.3., the latency also has two-step. We need to calculate th
 ![Alt text](images/PlotLatency.png?raw=true "Latency Plot")
 
 ### 2.5. AAVE Liquidation Call Prediction
-
+We also need to crawl the data for Health Factor Historical Plot and Liquidation Risk Analysis Visualization (probability of HF drop below 1). Below is the input example for plot generating.
 ![Alt text](images/DebtMonitor.png?raw=true "Health Factor")
