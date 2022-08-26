@@ -90,7 +90,7 @@ There are two way to udpate price data, the first one is automatically update al
 ![Alt text](images/DataUpdateDetails.png?raw=true "Data Update")
 example of clicked auto update:
 ![Alt text](images/AutoUpdateData.png?raw=true "Data Auto Update")
-example of cliced manual update:
+example of clicked manual update:
 ![Alt text](images/ManualUpdateData.png?raw=true "Data Manual Update")
 
 ### 2.2. Block Price Data Update
