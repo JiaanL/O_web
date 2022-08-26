@@ -12,6 +12,8 @@ This repository implements Oracle Data (including block Price feed and latency) 
 
 ## 1. Setup
 
+please cd into ./oracleWeb first.
+
 ### 1.1. Prepare Envionment
 Python version 3.8.12 <br />
 Django (4, 0, 6, 'final', 0) <br />
