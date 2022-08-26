@@ -4,8 +4,8 @@ This repository implements Oracle Data (including block Price feed and latency) 
 
 
 ### Table of Contents
-**[1. Setup](#setup)**<br>
-**[2. Functions of Manual Plot Section](#functions-of-manual-plot-section)**<br>
+**[1. Setup](#1-setup)**<br>
+**[2. Functions of Manual Plot Section](#2-functions-of-manual-plot-section)**<br>
 
 
 ## 1. Setup
