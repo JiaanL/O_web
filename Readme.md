@@ -49,7 +49,7 @@ archive_node = "http://localhost:19545"
 ### 1.3. Connection to MySQL
 a. Before connecting to the local MySQL server, we must install MySQL first. Please refer to https://docs.djangoproject.com/en/4.1/ref/databases/#mysql-notes
 
-b. Download and restore the MySQL Dump to the local MySQL Server from https://1drv.ms/u/s!AuU01Mwe0FZKjqA6JhSV8KrN0EtW3Q?e=zvsS6v (oracle_web3.sql is the latest data)
+b. Download and restore the MySQL Dump to the local MySQL Server from https://1drv.ms/u/s!AuU01Mwe0FZKjqA6JhSV8KrN0EtW3Q?e=zvsS6v (a largerest i in oracle_web{i}.sql is the latest data)
 ```
 mysql -u [user] -p [database_name] < [filename].sql
 ```
