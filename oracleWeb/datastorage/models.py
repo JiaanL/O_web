@@ -48,7 +48,7 @@ class Price(models.Model):
     data_crawled_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('block_number', 'index',)
+        unique_together = ('token_pair', 'block_number', 'index',)
     
 class Summary(models.Model):
     token_pair = models.ForeignKey(TokenPair, on_delete=models.CASCADE, unique=True)

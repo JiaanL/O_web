@@ -262,28 +262,29 @@ def insert_price(df, token_pair, replace=False):
     #     block_number = BlockNumber.objects.create(number=df["BlockNum"])
     index = df["Index"]
     current = df["Current"]
-    try:
+    # try:
     #     Price.objects.get(
     #         block_number=block_number,
     #         index=index
     #     )
     # except Price.DoesNotExist:
-        Price.objects.create(
-            # oracle=oracle,
+        # print(token_pair,block_number,index,current)
+    obj, created = Price.objects.get_or_create(
+        # oracle=oracle,
+        token_pair=token_pair,
+        block_number=block_number,
+        index=index,
+        current=current
+    )
+    # except IntegrityError:
+    if replace:
+        new_p = Price.objects.get(
             token_pair=token_pair,
             block_number=block_number,
-            index=index,
-            current=current
+            index=index
         )
-    except IntegrityError:
-        if replace:
-            new_p = Price.objects.get(
-                token_pair=token_pair,
-                block_number=block_number,
-                index=index
-            )
-            new_p.current = current
-            new_p.save()
+        new_p.current = current
+        new_p.save()
     return 1
 
 def update_data_from_csv(request, oracle_name):
@@ -539,7 +540,7 @@ def update_data(request):
                 cut_start = 0
                 for i, new_col in enumerate("amount0 amount1 sqrtPriceX96 liquidity tick".split(" ")):
                     cut_end = cut_start + cut_gap
-                    res[new_col] = res['Data'].parallel_apply(lambda x: hex2int(x[cut_start:cut_end]))
+                    res[new_col] = res['Data'].apply(lambda x: hex2int(x[cut_start:cut_end]))
                     cut_start = cut_end
             
                 if token0 == 'eth':

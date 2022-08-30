@@ -135,12 +135,18 @@ http://127.0.0.1:8000/datastorage/initialize
 ```
 
 
-2. after seeing the "done", go to
+2. after seeing the "done" in previous step, go to
 ```
 http://127.0.0.1:8000/datastorage/update_data
 ```
 
-Input the data that you want to include in the database. We only support eth against usd, usdt, usdc, and dai for data in uniswapv2, uniswapv3 and chainlink for now. All data need to be in lowercase. Recommend to input block after the Oracle is deployed, and with a small BlockTo and let the auto update to handle the remaining data.
+Input the data that you want to include in the database. We only support 
+
+uniswapv2 & uniswapv3: eth/usdc eth/usdt eth/dai usdc/eth usdt/eth and dai/eth
+chainlink: eth/usd usdc/eth usdt/eth and dai/eth
+maker: eth/usd
+
+All data need to be in lowercase. Recommend to input block after the Oracle is deployed, and with a small BlockTo and let the auto update to handle the remaining data.
 ![Alt text](images/UpdateDataStorage.png?raw=true "Health Factor")
 
 3. open the link (assuming 8000 is the port) to setup debtmonitor
@@ -149,7 +155,12 @@ http://127.0.0.1:8000/debtmonitor/update_data
 ```
 Input a reasonable range (e.g., from block 11363052 100 blocks after), similar to datastorage update data.
 
-3. Back to the main web to start auto-update
+4. open the link to update summary
+```
+http://127.0.0.1:8000/datastorage/all_oracle?update_summary=1
+```
+
+5. Back to the main web to start auto-update
 
 
 ## 5. Example of Plot

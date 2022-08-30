@@ -221,8 +221,24 @@ def main(request):
                     HFPlotConfig['have_data'] = True
                     start_plot_hf(request)
 
-        
-    print(Config)
+    
+
+    summaries = BlockPriceUpdateRecord.objects.all()
+    for i in range(len(PricePlotConfig['summaries'])):
+        PricePlotConfig['summaries'][i].min_block_number =  summaries[i].min_block_number
+        PricePlotConfig['summaries'][i].max_block_number =  summaries[i].max_block_number
+
+    summaries = LatencyUpdateRecord.objects.all()
+    for i in range(len(LatencyPlotConfig['summaries'])):
+        LatencyPlotConfig['summaries'][i].min_block_number =  summaries[i].min_block_number
+        LatencyPlotConfig['summaries'][i].max_block_number =  summaries[i].max_block_number
+    
+    summaries = LendingPoolUpdateSummary.objects.all()
+    for i in range(len(HFPlotConfig['summaries'])):
+        HFPlotConfig['summaries'][i].min_block_number =  summaries[i].min_block_number
+        HFPlotConfig['summaries'][i].max_block_number =  summaries[i].max_block_number
+
+    # print(Config)
     content = dict(
         data_storage_summaries=Summary.objects.all(),
         price_plot_config=PricePlotConfig,
@@ -238,7 +254,7 @@ def main(request):
 
 def auto_main(request):
 
-    global Config, RunningThread, PricePlotConfig
+    global Config, RunningThread, PricePlotConfig, LatencyPlotConfig
 
     # print(request.POST.get('auto_all', False))
     # return render(request, "oracle_web/oracle_auto_web.html")
@@ -304,6 +320,22 @@ def auto_main(request):
         Config['auto_update_lending_pool'] = True
     else:
         Config['auto_update_lending_pool'] = False
+
+
+    summaries = BlockPriceUpdateRecord.objects.all()
+    for i in range(len(PricePlotConfig['summaries'])):
+        PricePlotConfig['summaries'][i].min_block_number =  summaries[i].min_block_number
+        PricePlotConfig['summaries'][i].max_block_number =  summaries[i].max_block_number
+
+    summaries = LatencyUpdateRecord.objects.all()
+    for i in range(len(LatencyPlotConfig['summaries'])):
+        LatencyPlotConfig['summaries'][i].min_block_number =  summaries[i].min_block_number
+        LatencyPlotConfig['summaries'][i].max_block_number =  summaries[i].max_block_number
+    
+    summaries = LendingPoolUpdateSummary.objects.all()
+    for i in range(len(HFPlotConfig['summaries'])):
+        HFPlotConfig['summaries'][i].min_block_number =  summaries[i].min_block_number
+        HFPlotConfig['summaries'][i].max_block_number =  summaries[i].max_block_number
 
     content = dict(
         # data_storage_summaries=Summary.objects.all(),

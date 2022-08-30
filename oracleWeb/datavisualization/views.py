@@ -91,7 +91,7 @@ def block_granularity_update(request):
                 price = price['block_number_id current'.split(' ')]
                 # price.columns = ['block_number', 'current']
                 # get blcok average
-                price = price.groupby('block_number_id').parallel_apply(np.mean)[['current']]
+                price = price.groupby('block_number_id').apply(np.mean)[['current']]
                 # price.groupby('block_number').parallel_apply(lambda x: x.sort_values(by='index'))
 
             
